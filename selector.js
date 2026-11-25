@@ -3,7 +3,11 @@
 const panel = document.querySelector("#opciones");
 const grafica = document.querySelector("#grafica svg");
 const geometria = JSON.parse(document.querySelector("#geometria").textContent);
-const casillas = [...panel.querySelectorAll('input[type="checkbox"]')];
+const casillas = [...panel.querySelectorAll('input[name]')];
+const cifras = [...panel.querySelectorAll('[data-etiqueta]')];
+const etiquetas = Object.fromEntries(cifras.map(({dataset}) => [
+    dataset.etiqueta, [...grafica.querySelectorAll(`[id^="etiqueta-${dataset.etiqueta}-"]`)],
+]));
 const series = Object.fromEntries(casillas.map(({name}) => [
     name, [...grafica.querySelectorAll(`[id^="serie-${name}-"]`)],
 ]));
@@ -43,6 +47,11 @@ function actualizar() {
         nodos.forEach(nodo => ocultar(nodo, !visible[id]));
     });
 
+    cifras.forEach(casilla => {
+        const id = casilla.dataset.etiqueta;
+        etiquetas[id].forEach(nodo => ocultar(nodo, !visible[id] || !casilla.checked));
+    });
+
     for (const grupo of geometria.grupos) {
         const elegidas = grupo.filter(({id}) => visible[id]);
         const ancho = elegidas.reduce((suma, barra) => suma + barra.ancho, 0)
@@ -51,7 +60,7 @@ function actualizar() {
         for (const barra of elegidas) {
             const centro = izquierda + barra.ancho / 2;
             const ajuste = (centro - barra.origen) * geometria.escala;
-            series[barra.id].forEach(nodo => mover(nodo, ajuste));
+            [...series[barra.id], ...etiquetas[barra.id]].forEach(nodo => mover(nodo, ajuste));
             izquierda += barra.ancho + geometria.separacion;
         }
     }
@@ -78,6 +87,7 @@ function actualizar() {
     const mostrarNotas = {
         "nota-fuente": true,
         "nota-comparacion": visible.benchmark || visible.reference || visible.comparison_band,
+        "nota-banda": visible.comparison_band,
         "nota-plan": Object.values(combinaciones).flat().some(id => visible[id]),
         "nota-prevision": visible.bus_forecast,
     };
@@ -123,7 +133,7 @@ async function descargar() {
 
 panel.addEventListener("change", actualizar);
 document.querySelector("#restablecer").addEventListener("click", () => {
-    casillas.forEach(casilla => { casilla.checked = true; });
+    [...casillas, ...cifras].forEach(casilla => { casilla.checked = casilla.defaultChecked; });
     actualizar();
 });
 document.querySelector("#descargar").addEventListener("click", descargar);

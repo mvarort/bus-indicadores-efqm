@@ -74,7 +74,12 @@ limitación. Mediana y referencia del grupo se muestran solo en el histórico.
 Las metas y límites de 2016–2028 están en la configuración y son
 ilustrativos. En la lámina, la línea azul media sigue la mediana y la
 azul oscura, el mejor resultado. La banda semitransparente ocupa el espacio
-entre ambas líneas y termina en el último año observado. El PNG integra estas definiciones, la nota de
+entre ambas líneas y termina en el último año observado. Para indicadores de
+polaridad decreciente (`mejor: min`), la referencia es el mínimo
+anual y el área queda entre ese mínimo y la mediana. Para los de
+polaridad creciente (`mejor: max`), el máximo es la referencia.
+La banda describe resultados observados del grupo, sin interpretación
+de intervalo de confianza ni de zona de excelencia. El PNG integra estas definiciones, la nota de
 incertidumbre y las cifras BUS en vertical dentro de sus barras. Los
 valores exactos de metas, límites y comparaciones están en el CSV.
 

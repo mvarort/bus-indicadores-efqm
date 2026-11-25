@@ -4,15 +4,17 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter, MaxNLocator
+from matplotlib.transforms import blended_transform_factory
 import pandas as pd
 
 LIMITE = "#512060"
 BUS = "#C8102E"
 META = "#388E3C"
-AZUL = "#C5DAEF"
-BENCHMARK = "#487FB3"
-REFERENCIA = "#254D76"
+AZUL = "#D6E7F5"
+BENCHMARK = "#4682B4"
+REFERENCIA = "#163D70"
 ALFA_BANDA = .53
+TRAZO_BENCHMARK = (0, (4, 2.5))
 ROSADO = "#F8D6DC"
 TINTA = "#172637"
 SECUNDARIO = "#45566A"
@@ -22,7 +24,7 @@ EXPORT_DPI = 200
 CONTROLES = {
     "Histórico": {"bus_actual": "Resultado BUS", "target_historical": "Meta histórica",
                   "threshold_historical": "Límite histórico"},
-    "Comparación externa": {"benchmark": "Benchmark", "reference": "Referencia del grupo",
+    "Comparaciones externas": {"benchmark": "Benchmark", "reference": "Referencia del grupo",
                             "comparison_band": "Banda comparativa"},
     "Prospectiva": {"bus_forecast": "Previsión BUS", "target_future": "Meta futura",
                     "threshold_future": "Límite futuro"},
@@ -38,6 +40,7 @@ BARRAS = (
      ("target_future", "meta", .18, META)),
 )
 SEPARACION = .03
+ETIQUETAS_INICIALES = {"bus_actual", "bus_forecast"}
 
 
 def numero(value):
@@ -46,17 +49,45 @@ def numero(value):
     return entero.replace(",", ".") + (f",{fraccion}" if fraccion else "")
 
 
-def rotular_bus(ax, valores, serie, futuro):
-    """Sitúa el valor en vertical dentro de cada barra observada o prevista."""
-    color = "#85122A" if futuro else "white"
-    fondo = dict(facecolor=ROSADO, edgecolor="none", boxstyle="round,pad=.20") if futuro else None
+def rotular_barras(ax, valores, serie, futuro, desplazamiento, color):
+    """Muestra las cifras de la BUS por defecto y prepara las de meta y límite."""
+    bus = serie in ETIQUETAS_INICIALES
+    fondo = ROSADO if serie == "bus_forecast" else "white"
+    if futuro or not bus:
+        tinta = "#85122A" if bus else color
+        caja = dict(facecolor=fondo, edgecolor="none", boxstyle="round,pad=.18")
+    else:
+        tinta, caja = "white", None
     for year, value in valores.items():
         etiqueta = ax.annotate(
-            numero(value), (year, value), xytext=(0, -7), textcoords="offset points",
-            ha="center", va="top", rotation=90, fontsize=9.5, fontweight="bold",
-            color=color, bbox=fondo, zorder=7,
+            numero(value), (year + desplazamiento, value), xytext=(0, -7),
+            textcoords="offset points", ha="center", va="top", rotation=90,
+            fontsize=9.5 if bus else 7.5, fontweight="bold", color=tinta, bbox=caja, zorder=7,
+            visible=bus,
         )
-        etiqueta.set_gid(f"serie-{serie}-etiqueta-{year}")
+        etiqueta.set_gid(f"etiqueta-{serie}-{year}")
+
+
+def rotular_comparacion(fig, ax, hist):
+    """Alinea los valores opcionales debajo de cada año sin tapar las series."""
+    posicion = blended_transform_factory(ax.transData, fig.transFigure)
+    filas = [
+        ("benchmark", "Benchmark", BENCHMARK, hist.benchmark.map(numero, na_action="ignore")),
+        ("reference", "Referencia", REFERENCIA, hist.referencia.map(numero, na_action="ignore")),
+        ("comparison_band", "Banda", REFERENCIA, {
+            year: f"{numero(min(mediana, mejor))}–{numero(max(mediana, mejor))}"
+            for year, mediana, mejor in hist[["benchmark", "referencia"]].dropna().itertuples()
+        }),
+    ]
+    for orden, (serie, titulo, color, valores) in enumerate(filas):
+        y = .185 - orden * .012
+        textos = [(hist.index[0] - .59, titulo, "right"), *[
+            (year, valor, "center") for year, valor in valores.items() if pd.notna(valor)
+        ]]
+        for i, (x, valor, alineacion) in enumerate(textos):
+            artista = fig.text(x, y, valor, transform=posicion, color=color,
+                               fontsize=6.4, ha=alineacion, va="center", visible=False)
+            artista.set_gid(f"etiqueta-{serie}-fila-{i}")
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
@@ -69,10 +100,11 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
     banda = ax.fill_between(hist.index, hist.benchmark, hist.referencia,
                            color=AZUL, alpha=ALFA_BANDA, linewidth=0, zorder=0)
     banda.set_gid("serie-comparison_band-historico")
-    for serie, columna, color in [
-        ("benchmark", "benchmark", BENCHMARK), ("reference", "referencia", REFERENCIA),
+    for serie, columna, color, trazo in [
+        ("benchmark", "benchmark", BENCHMARK, TRAZO_BENCHMARK),
+        ("reference", "referencia", REFERENCIA, "-"),
     ]:
-        linea, = ax.plot(hist.index, hist[columna], color=color, linewidth=1.65, zorder=2)
+        linea, = ax.plot(hist.index, hist[columna], color=color, linewidth=1.65, linestyle=trazo, zorder=2)
         linea.set_gid(f"serie-{serie}-historico")
 
     for periodo, futuro, grupo in [(hist, False, BARRAS[0]), (fut, True, BARRAS[1])]:
@@ -88,8 +120,9 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
             barras = ax.bar(valores.index + desplazamiento, valores, width=ancho, zorder=3, **estilo)
             for year, barra in zip(valores.index, barras):
                 barra.set_gid(f"serie-{serie}-barra-{year}")
-            if serie in {"bus_actual", "bus_forecast"}:
-                rotular_bus(ax, valores, serie, futuro)
+            rotular_barras(ax, valores, serie, futuro, desplazamiento, color)
+
+    rotular_comparacion(fig, ax, hist)
 
     superior = panel[["bus", "referencia", "prevision", "limite", "meta"]].max().max()
     ax.set_ylim(0, superior * 1.13)
@@ -117,7 +150,7 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
         ("bus_actual", Patch(facecolor=BUS, label="BUS")),
         ("target", Patch(facecolor=META, label="Meta")),
         ("bus_forecast", Patch(facecolor=ROSADO, edgecolor=BUS, hatch="///", label="Previsión BUS")),
-        ("benchmark", Line2D([], [], color=BENCHMARK, linewidth=1.65, label="Benchmark")),
+        ("benchmark", Line2D([], [], color=BENCHMARK, linewidth=1.65, linestyle=TRAZO_BENCHMARK, label="Benchmark")),
         ("reference", Line2D([], [], color=REFERENCIA, linewidth=1.65, label="Referencia del grupo")),
         ("comparison_band", Patch(facecolor=AZUL, alpha=ALFA_BANDA, label="Banda comparativa")),
     ]
@@ -133,12 +166,14 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
                           color="#DFE5EC", linewidth=.7))
     notas = [
         ("fuente", "Fuente  REBIUN Data Explorer."),
-        ("comparacion", "Benchmark = mediana del grupo comparador · Referencia del grupo = mejor resultado anual."),
+        ("comparacion", "Benchmark: mediana del grupo comparador. Referencia del grupo: mejor resultado anual. "
+         "Banda comparativa: intervalo comprendido entre ambas referencias."),
+        ("banda", "La banda no es un intervalo de confianza estadístico ni una zona de excelencia."),
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
         ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones sujetas a incertidumbre, sin intervalo calibrado."),
     ]
     for i, (clave, nota) in enumerate(notas):
-        artista = fig.text(.048, .130 - i * .026, nota, fontsize=9, color=SECUNDARIO, va="top")
+        artista = fig.text(.048, .132 - i * .023, nota, fontsize=9, color=SECUNDARIO, va="top")
         artista.set_gid(f"nota-{clave}")
     return fig
 
@@ -146,5 +181,15 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
 def exportar(fig, destino):
     """Exporta la misma composición al PNG principal y al SVG vectorial."""
     fig.savefig(destino / "grafica.png", dpi=EXPORT_DPI)
-    fig.savefig(destino / "grafica.svg", format="svg",
-                metadata={"Title": fig.texts[0].get_text(), "Date": None})
+    opcionales = [artista for artista in [*fig.texts, *fig.axes[0].texts]
+                  if (artista.get_gid() or "").startswith("etiqueta-") and not artista.get_visible()]
+    for artista in opcionales:
+        artista.set_visible(True)
+    ruta_svg = destino / "grafica.svg"
+    fig.savefig(ruta_svg, format="svg", metadata={"Title": fig.texts[0].get_text(), "Date": None})
+    svg = ruta_svg.read_text(encoding="utf-8")
+    for artista in opcionales:
+        grupo = f'<g id="{artista.get_gid()}"'
+        svg = svg.replace(grupo + ">", grupo + ' style="display:none">', 1)
+        artista.set_visible(False)
+    ruta_svg.write_text(svg, encoding="utf-8")

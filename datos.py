@@ -40,7 +40,10 @@ def preparar(datos, centros, config, codigo):
         panel[ID].ne(config["biblioteca"])
     ].copy().sort_values(["Anio", "Biblioteca"])
     grupo = miembros.groupby("Anio")[codigo]
-    mejor = getattr(grupo, config["indicadores"][codigo]["mejor"])()
+    polaridad = config["indicadores"][codigo]["mejor"]
+    if polaridad not in {"max", "min"}:
+        raise ValueError(f"{codigo}: la polaridad debe ser max o min")
+    mejor = grupo.max() if polaridad == "max" else grupo.min()
     miembros["referencia"] = miembros[codigo].notna() & miembros[codigo].eq(miembros.Anio.map(mejor))
     return pd.DataFrame({
         "bus": bus, "benchmark": grupo.median(), "referencia": mejor,

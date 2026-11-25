@@ -16,7 +16,10 @@ main { max-width: 1600px; margin: auto; }
             background: #f5f8fb; border: 1px solid #dfe5ec; border-radius: 8px; font-size: .85rem; }
 fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 legend { padding: 0; font-weight: 650; }
-label { display: inline-flex; gap: 4px; align-items: center; padding: 4px 7px 4px 0; }
+.series { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; }
+.series > span { color: #45566a; font-size: .75rem; }
+.series > input { justify-self: center; }
+label { display: flex; gap: 4px; align-items: center; cursor: pointer; }
 input { accent-color: #254d76; }
 button { padding: 7px 10px; border: 1px solid #b1c0d1; background: white; border-radius: 5px;
          color: #172637; font: inherit; cursor: pointer; }

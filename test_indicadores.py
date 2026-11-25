@@ -1,5 +1,6 @@
 """Contrastes independientes del cálculo principal contra los CSV originales."""
 import csv
+from copy import deepcopy
 import json
 import os
 import statistics
@@ -11,6 +12,7 @@ from matplotlib.colors import to_rgba
 import pandas as pd
 from PIL import Image
 
+from datos import ID, preparar
 from grafico import ALFA_BANDA, AZUL, BENCHMARK, BUS, CONTROLES, LIMITE, META, REFERENCIA, grafico, numero
 
 
@@ -57,6 +59,33 @@ class Indicadores(unittest.TestCase):
                 self.assertEqual(row.benchmark, statistics.median(datos.values()))
                 self.assertEqual(row.referencia, max(datos.values()))
 
+    def test_polaridad_decreciente(self):
+        config = deepcopy(self.config)
+        config["indicadores"]["NPRESTDOMIC"]["mejor"] = "min"
+        datos = pd.DataFrame(
+            [(year, centro, codigo, valor) for (year, centro, codigo), valor in self.original.items()
+             if centro in self.presenciales],
+            columns=["Anio", ID, "Codigo_Tecnico", "Valor"],
+        )
+        centros = pd.DataFrame([(centro, centro, "Presencial") for centro in sorted(self.presenciales)],
+                               columns=[ID, "Biblioteca", "Modalidad"])
+        calculado, miembros = preparar(datos, centros, config, "NPRESTDOMIC")
+        for year, fila in calculado.iterrows():
+            datos_anuales = miembros.loc[miembros.Anio.eq(year)]
+            self.assertEqual(fila.referencia, datos_anuales.NPRESTDOMIC.min())
+            self.assertLessEqual(fila.referencia, fila.benchmark)
+            self.assertEqual(fila.benchmark, self.serie.loc[year, "benchmark"])
+            self.assertTrue(datos_anuales.loc[datos_anuales.referencia, "NPRESTDOMIC"].eq(fila.referencia).all())
+        ajuste = config["indicadores"]["NPRESTDOMIC"]
+        panel = self.serie.copy()
+        panel["referencia"] = calculado.referencia
+        fig = grafico(panel, 2025, ajuste["titulo"], ajuste["subtitulo"], "Préstamos",
+                      "Media móvil de 3 años", True)
+        banda, = fig.axes[0].collections
+        vertices = {tuple(p) for p in banda.get_paths()[0].vertices}
+        for year, fila in calculado.iterrows():
+            self.assertEqual({y for x, y in vertices if x == year}, {fila.referencia, fila.benchmark})
+
     def test_prevision_metas_y_validacion(self):
         futuro = self.serie.loc[2026:2028]
         self.assertTrue(futuro[["bus", "benchmark", "referencia"]].isna().all().all())
@@ -91,6 +120,8 @@ class Indicadores(unittest.TestCase):
             self.assertEqual(list(linea.get_ydata()), list(hist[col]))
             self.assertEqual(linea.get_color(), color)
             self.assertLess(linea.get_zorder(), barras[0].patches[0].get_zorder())
+        self.assertTrue(ax.lines[0].is_dashed())
+        self.assertFalse(ax.lines[1].is_dashed())
         banda, = ax.collections
         self.assertEqual(tuple(banda.get_facecolor()[0]), to_rgba(AZUL, ALFA_BANDA))
         self.assertLess(banda.get_zorder(), ax.lines[0].get_zorder())
@@ -142,6 +173,7 @@ class Indicadores(unittest.TestCase):
         for opciones in CONTROLES.values():
             for serie, nombre in opciones.items():
                 self.assertIn(f'name="{serie}" checked> {nombre}', html)
+                self.assertIn(f'data-etiqueta="{serie}" aria-label="Cifras de {nombre}"', html)
         self.assertIn("Descargar imagen PNG", html)
         self.assertIn("Restablecer selección", html)
         for accesorio in ["<table", "<details", "<article"]:
@@ -149,9 +181,12 @@ class Indicadores(unittest.TestCase):
         with Image.open(self.distribucion / "grafica.png") as png:
             self.assertEqual(png.size, (3200, 1480))
         svg = (self.distribucion / "grafica.svg").read_text(encoding="utf-8")
+        self.assertIn('id="etiqueta-target_future-2026" style="display:none"', svg)
+        self.assertIn('id="etiqueta-bus_forecast-2026">', svg)
+        self.assertIn("stroke-dasharray", svg)
         for contenido in [
             "Préstamos domiciliarios de material bibliográfico", "más de 40.000",
-            "REBIUN Data Explorer", "mediana del grupo", "mejor resultado anual",
+            "REBIUN Data Explorer", "mediana del grupo", "mejor resultado anual", "intervalo de confianza estadístico",
             "Metas y límites ilustrativos", "media móvil de 3 años", "incertidumbre",
             "350.602", "365.118", "354.793",
         ]:

@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from datos import cargar, preparar
-from grafico import BARRAS, CONTROLES, SEPARACION, exportar, grafico
+from grafico import BARRAS, CONTROLES, ETIQUETAS_INICIALES, SEPARACION, exportar, grafico
 from prevision import evaluar
 
 
@@ -49,11 +49,17 @@ def pagina(config, codigo, datos, centros, root):
     plantilla = Path(__file__).with_name("pagina.html").read_text(encoding="utf-8")
     controles = []
     for titulo, opciones in CONTROLES.items():
-        casillas = "".join(
-            f'<label><input type="checkbox" name="{serie}" checked> {nombre}</label>'
-            for serie, nombre in opciones.items()
+        casillas = []
+        for serie, nombre in opciones.items():
+            inicial = " checked" if serie in ETIQUETAS_INICIALES else ""
+            casillas.append(
+                f'<label><input type="checkbox" name="{serie}" checked> {nombre}</label>'
+                f'<input type="checkbox" data-etiqueta="{serie}" aria-label="Cifras de {nombre}"{inicial}>'
+            )
+        controles.append(
+            f'<fieldset><legend>{titulo}</legend><div class="series">'
+            f'<span>Serie</span><span>Cifras</span>{"".join(casillas)}</div></fieldset>'
         )
-        controles.append(f"<fieldset><legend>{titulo}</legend>{casillas}</fieldset>")
     svg = (destino / "grafica.svg").read_text(encoding="utf-8")
     svg = svg[svg.index("<svg "):]
     escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / (len(panel) + .04)
