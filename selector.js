@@ -41,7 +41,60 @@ function mover(nodo, x, y = 0) {
     }
 }
 
-function actualizar() {
+const barrasRotuladas = geometria.grupos.flat().flatMap(({id, color}) =>
+    etiquetas[id].map(nodo => {
+        const year = nodo.id.split("-").at(-1);
+        const glifos = nodo.querySelector(":scope > g[transform]");
+        nodo.querySelector(':scope > g[id^="patch_"]')?.remove();
+        return {id, year, color, nodo, glifos, barra: grafica.querySelector(`#serie-${id}-barra-${year}`)};
+    })
+).sort((a,b) => Number(b.id.startsWith("bus_")) - Number(a.id.startsWith("bus_")));
+
+function situarRotulos(visible, ajustes, escalaPantalla) {
+    const rotulos = barrasRotuladas.filter(({nodo}) => nodo.style.display !== "none");
+    const margen = Math.max(1.45, 1.8/escalaPantalla);
+    const segmentos = Object.entries(geometria.segmentos).flatMap(([id, trazos]) =>
+        visible[id] ? trazos.map(([x1,y1,x2,y2,r]) => {
+            const dx = ajustes[id] || 0;
+            return [x1+dx, y1, x2+dx, y2, r];
+        }) : []);
+    const medida = ({x,y,width,height}) => ({x,y,w:width,h:height});
+    const medidaBarra = ({barra, id}) => {
+        const caja = medida(barra.getBBox());
+        caja.x += ajustes[id] || 0;
+        return caja;
+    };
+    const barras = barrasRotuladas.filter(({id}) => visible[id]).map(medidaBarra);
+    const entradas = rotulos.map(({nodo, barra, id}) => {
+        nodo.querySelector(".fondo-etiqueta")?.remove();
+        return {barra: medidaBarra({barra, id}), texto: medida(nodo.getBBox())};
+    });
+    const salida = colocarEtiquetas({etiquetas:entradas, segmentos, limites:geometria.limites, margen, barras});
+    rotulos.forEach(({nodo, glifos, id, color}, i) => {
+        const {texto} = entradas[i];
+        const lugar = salida[i];
+        if (!lugar) {
+            mover(nodo, ajustes[id] || 0);
+            return;
+        }
+        mover(nodo, lugar.x - texto.x, lugar.y - texto.y);
+        const dentroHistorico = !lugar.exterior && (id.endsWith("_historical") || id === "bus_actual");
+        const exterior = color === "#388E3C" ? "#216528" : color === "#C8102E" ? "#9B1025" : color;
+        glifos.style.fill = dentroHistorico ? "white" : lugar.exterior ? exterior : color;
+        if (lugar.exterior || id === "bus_forecast") {
+            const fondo = document.createElementNS(grafica.namespaceURI, "rect");
+            fondo.setAttribute("class", "fondo-etiqueta");
+            fondo.setAttribute("fill", lugar.exterior ? "#ffffff" : "#fbe7ea");
+            fondo.setAttribute("x", texto.x - 1);
+            fondo.setAttribute("y", texto.y - 1);
+            fondo.setAttribute("width", texto.w + 2);
+            fondo.setAttribute("height", texto.h + 2);
+            nodo.prepend(fondo);
+        }
+    });
+}
+
+function actualizar(escalaPantalla = grafica.getScreenCTM().a) {
     const visible = Object.fromEntries(casillas.map(({name, checked}) => [name, checked]));
     Object.entries(series).forEach(([id, nodos]) => {
         nodos.forEach(nodo => ocultar(nodo, !visible[id]));
@@ -52,6 +105,7 @@ function actualizar() {
         etiquetas[id].forEach(nodo => ocultar(nodo, !visible[id] || !casilla.checked));
     });
 
+    const ajustes = {};
     let ajusteIntervalo = 0;
     for (const grupo of geometria.grupos) {
         const elegidas = grupo.filter(({id}) => visible[id]);
@@ -61,13 +115,19 @@ function actualizar() {
         for (const barra of elegidas) {
             const centro = izquierda + barra.ancho / 2;
             const ajuste = (centro - barra.origen) * geometria.escala;
-            [...series[barra.id], ...etiquetas[barra.id]].forEach(nodo => mover(nodo, ajuste));
+            ajustes[barra.id] = ajuste;
+            series[barra.id].forEach(nodo => mover(nodo, ajuste));
             if (barra.id === "bus_forecast") ajusteIntervalo = ajuste;
             izquierda += barra.ancho + geometria.separacion;
         }
     }
 
+    ajustes.prediction_interval = ajusteIntervalo;
     series.prediction_interval.forEach(nodo => mover(nodo, ajusteIntervalo));
+    grafica.querySelectorAll('[id^="etiqueta-prediction_interval-"]').forEach(
+        nodo => ocultar(nodo, !visible.prediction_interval),
+    );
+    situarRotulos(visible, ajustes, escalaPantalla);
 
     let hueco = 0;
     leyenda.forEach((elemento, i) => {
@@ -110,7 +170,9 @@ function actualizar() {
 
 async function descargar() {
     const estado = document.querySelector("#estado");
+    actualizar(3200 / grafica.viewBox.baseVal.width);
     const copia = grafica.cloneNode(true);
+    actualizar();
     copia.querySelector("metadata")?.remove();
     const xml = new XMLSerializer().serializeToString(copia);
     const url = URL.createObjectURL(new Blob([xml], {type: "image/svg+xml;charset=utf-8"}));
@@ -156,7 +218,9 @@ document.querySelector("#indicador").addEventListener("change", ({target}) => {
 });
 document.querySelector("#horizonte").addEventListener("change", ({target}) => cambiarVista(target.value));
 
-panel.addEventListener("change", actualizar);
+panel.addEventListener("change", () => actualizar());
+const redimensionar = new ResizeObserver(() => actualizar());
+redimensionar.observe(grafica);
 document.querySelector("#restablecer").addEventListener("click", () => {
     [...casillas, ...cifras].forEach(casilla => { casilla.checked = casilla.defaultChecked; });
     actualizar();

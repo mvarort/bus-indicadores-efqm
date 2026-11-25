@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from datos import cargar, preparar
+from etiquetas import geometria_etiquetas, situar_estaticas
 from grafico import BARRAS, CONTROLES, ETIQUETAS_INICIALES, SEPARACION, exportar, grafico
 from prevision import evaluar
 from intervalos import METODOS, evaluar_intervalos
@@ -103,6 +104,8 @@ def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, su
                   maximo=ajuste["limites_naturales"][1], notas_indicador=ajuste["notas"],
                   polaridad=ajuste["polaridad"], unidad_porcentual=ajuste.get("formato") == "porcentaje",
                   nota_intervalo=nota_intervalo, periodo_ajuste=periodo_ajuste)
+    disposicion = geometria_etiquetas(fig)
+    situar_estaticas(fig, disposicion)
     exportar(fig, destino, sufijo)
     plantilla = Path(__file__).with_name("pagina.html").read_text(encoding="utf-8")
     controles = []
@@ -110,9 +113,13 @@ def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, su
         casillas = []
         for serie, nombre in opciones.items():
             inicial = " checked" if serie in ETIQUETAS_INICIALES else ""
+            if serie == "comparison_band":
+                cifra = f'<input type="checkbox" data-etiqueta="{serie}" disabled hidden><span aria-hidden="true">—</span>'
+            else:
+                cifra = f'<input type="checkbox" data-etiqueta="{serie}" aria-label="Cifras de {nombre}"{inicial}>'
             casillas.append(
                 f'<label><input type="checkbox" name="{serie}" checked> {nombre}</label>'
-                f'<input type="checkbox" data-etiqueta="{serie}" aria-label="Cifras de {nombre}"{inicial}>'
+                + cifra
             )
         controles.append(
             f'<fieldset><legend>{titulo}</legend><div class="series">'
@@ -122,9 +129,9 @@ def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, su
     svg = svg[svg.index("<svg "):]
     escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / (len(panel) + .04)
     geometria = {
-        "escala": escala, "separacion": SEPARACION,
-        "grupos": [[{"id": serie, "ancho": ancho, "origen": origen}
-                    for (serie, _, ancho, _), origen in zip(grupo, (-.30, 0, .30))]
+        **disposicion, "escala": escala, "separacion": SEPARACION,
+        "grupos": [[{"id": serie, "ancho": ancho, "origen": origen, "color": color}
+                    for (serie, _, ancho, color), origen in zip(grupo, (-.30, 0, .30))]
                    for grupo in BARRAS],
     }
     opciones = []
@@ -156,7 +163,9 @@ def main():
     datos, centros = cargar(config, args.datos)
     script = Path(__file__).with_name("selector.js").read_bytes()
     (args.salida / "selector.js").write_bytes(script)
-    version_selector = sha256(script).hexdigest()[:12]
+    colocacion = Path(__file__).with_name("colocacion.js").read_bytes()
+    (args.salida / "colocacion.js").write_bytes(colocacion)
+    version_selector = sha256(script + colocacion).hexdigest()[:12]
     (args.salida / "metodologia.md").write_text(
         Path(__file__).with_name("metodologia.md").read_text(encoding="utf-8").replace("](datos_procesados/", "](NPRESTDOMIC/"),
         encoding="utf-8"

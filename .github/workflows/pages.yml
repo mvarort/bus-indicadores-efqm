@@ -21,6 +21,10 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test test_colocacion.js
       - run: python generar.py
       - run: python -m unittest -v
       - uses: actions/upload-pages-artifact@v3

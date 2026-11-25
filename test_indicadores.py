@@ -344,7 +344,13 @@ class Indicadores(unittest.TestCase):
         for opciones in CONTROLES.values():
             for serie, nombre in opciones.items():
                 self.assertIn(f'name="{serie}" checked> {nombre}', html)
-                self.assertIn(f'data-etiqueta="{serie}" aria-label="Cifras de {nombre}"', html)
+                if serie != "comparison_band":
+                    self.assertIn(f'data-etiqueta="{serie}" aria-label="Cifras de {nombre}"', html)
+        self.assertNotIn("etiqueta-comparison_band-fila", html)
+        self.assertNotIn("etiqueta-prediction_interval-inf-fila", html)
+        html_intervalos = (self.distribucion.parent / "NMONPAGOLIC" / "5.html").read_text()
+        self.assertIn("etiqueta-prediction_interval-inf-fila-5", html_intervalos)
+        self.assertIn("etiqueta-prediction_interval-sup-fila-5", html_intervalos)
         self.assertIn("Descargar imagen PNG", html)
         self.assertIn("Restablecer selección", html)
         for accesorio in ["<table", "<details", "<article"]:

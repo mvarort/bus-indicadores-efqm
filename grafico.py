@@ -57,42 +57,39 @@ def numero(value, decimales=None, sufijo=""):
 def rotular_barras(ax, valores, serie, futuro, desplazamiento, color, formato):
     """Muestra las cifras de la BUS por defecto y prepara las de meta y límite."""
     bus = serie in ETIQUETAS_INICIALES
-    fondo = ROSADO if serie == "bus_forecast" else "white"
-    if futuro or not bus:
-        tinta = "#85122A" if bus else color
-        caja = dict(facecolor=fondo, edgecolor="none", boxstyle="round,pad=.18")
-    else:
-        tinta, caja = "white", None
+    tinta = color if futuro else "white"
     for year, value in valores.items():
         etiqueta = ax.annotate(
-            formato(value), (year + desplazamiento, value), xytext=(6 if serie == "bus_forecast" else 0, -7),
+            formato(value), (year + desplazamiento, value), xytext=(0, -7),
             textcoords="offset points", ha="center", va="top", rotation=90,
-            fontsize=9.5 if bus else 7.5, fontweight="bold", color=tinta, bbox=caja, zorder=7,
+            fontsize=9.5 if bus else 7.5, fontweight="bold", color=tinta, zorder=7,
             visible=bus,
         )
         etiqueta.set_gid(f"etiqueta-{serie}-{year}")
 
 
-def rotular_comparacion(fig, ax, hist, formato):
-    """Alinea los valores opcionales debajo de cada año sin tapar las series."""
+def rotular_comparacion(fig, ax, hist, fut, formato, formato_intervalo, nota_intervalo):
+    """Alinea dos filas de cifras históricas y predictivas bajo cada año."""
     posicion = blended_transform_factory(ax.transData, fig.transFigure)
-    filas = [
-        ("benchmark", "Benchmark", BENCHMARK, hist.benchmark.map(formato, na_action="ignore")),
-        ("reference", "Referencia", REFERENCIA, hist.referencia.map(formato, na_action="ignore")),
-        ("comparison_band", "Banda", REFERENCIA, {
-            year: f"{formato(min(mediana, mejor))}–{formato(max(mediana, mejor))}"
-            for year, mediana, mejor in hist[["benchmark", "referencia"]].dropna().itertuples()
-        }),
-    ]
-    for orden, (serie, titulo, color, valores) in enumerate(filas):
-        y = .185 - orden * .012
-        textos = [(hist.index[0] - .59, titulo, "right"), *[
-            (year, valor, "center") for year, valor in valores.items() if pd.notna(valor)
+
+    def fila(serie, titulo, color, valores, limites, alineacion, y, visible, formatear=formato):
+        textos = [(limites, titulo, alineacion), *[
+            (year, formatear(valor), "center") for year, valor in valores.dropna().items()
         ]]
         for i, (x, valor, alineacion) in enumerate(textos):
             artista = fig.text(x, y, valor, transform=posicion, color=color,
-                               fontsize=6.4, ha=alineacion, va="center", visible=False)
+                               fontsize=7, ha=alineacion, va="center", visible=visible)
             artista.set_gid(f"etiqueta-{serie}-fila-{i}")
+
+    x_hist = hist.index[0] - .59
+    fila("benchmark", "Benchmark", BENCHMARK, hist.benchmark, x_hist, "right", .185, False)
+    fila("reference", "Referencia", REFERENCIA, hist.referencia, x_hist, "right", .171, False)
+    if nota_intervalo:
+        x_fut = hist.index[-1] + .5
+        fila("prediction_interval-inf", "IP inf.", GRIS_INTERVALO, fut.prediccion_inferior_95,
+             x_fut, "center", .185, True, formato_intervalo)
+        fila("prediction_interval-sup", "IP sup.", GRIS_INTERVALO, fut.prediccion_superior_95,
+             x_fut, "center", .171, True, formato_intervalo)
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
@@ -149,7 +146,7 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
                 barra.set_gid(f"serie-{serie}-barra-{year}")
             rotular_barras(ax, valores, serie, futuro, desplazamiento, color, formato)
 
-    rotular_comparacion(fig, ax, hist, formato_comparacion)
+    rotular_comparacion(fig, ax, hist, fut, formato_comparacion, formato, nota_intervalo)
 
     columnas_escala = ["bus", "benchmark", "referencia", "prevision", "limite", "meta"]
     if nota_intervalo:

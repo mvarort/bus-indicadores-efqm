@@ -1,6 +1,6 @@
 # Indicadores EFQM 2028
 
-Prototipo de una lámina por indicador, preparada para incorporarse como imagen en la plataforma de evaluación EFQM. La página pública permite probar combinaciones de nueve elementos en tres bloques. Los elementos visibles se reagrupan por año y determinan la leyenda, las notas y el PNG descargado. Cada serie tiene una casilla de cifras independiente. Las etiquetas aparecen cuando su serie es visible. Las cifras comparativas se alinean bajo cada año y la etiqueta de la banda muestra los dos extremos. «Restablecer selección» vuelve a mostrar todos los elementos y solo las cifras BUS. Los enlaces directos a PNG y SVG ofrecen la lámina con la selección inicial completa.
+Prototipo de una lámina por indicador, preparada para incorporarse como imagen en la plataforma de evaluación EFQM. La página pública permite probar combinaciones de nueve elementos en tres bloques. Los elementos visibles se reagrupan por año y determinan la leyenda, las notas y el PNG descargado. Cada serie tiene una casilla de cifras independiente. Las etiquetas aparecen cuando su serie es visible. Bajo el eje, los años históricos admiten cifras de Benchmark y Referencia. En los años futuros, «IP inf.» e «IP sup.» muestran los dos extremos del intervalo cuando está disponible y visible. «Restablecer selección» vuelve a mostrar todos los elementos y solo las cifras BUS. Los enlaces directos a PNG y SVG ofrecen la lámina con la selección inicial completa.
 
 [Ver la lámina](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/) ·
 [Descargar PNG de 3.200 × 1.480 px](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/grafica.png) ·
@@ -30,7 +30,7 @@ La ventana de ajuste se configura por indicador y figura en la lámina. En prés
 
 ## Instalación y generación
 
-Con Python 3.11:
+Con Python 3.11 y Node.js 22:
 
 ```sh
 python3.11 -m venv .venv
@@ -38,6 +38,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python generar.py
 python -m unittest -v
+node --test test_colocacion.js
 python -m http.server 8000 --directory site
 ```
 
@@ -47,6 +48,7 @@ Abre http://localhost:8000. El generador obtiene los CSV públicos de la revisi�
 
 - `datos.py` lee y cruza las fuentes.
 - `prevision.py` ajusta y valida los modelos.
+- `colocacion.js` mide el espacio disponible a partir de cajas y segmentos. La vista web y la generación local comparten ese algoritmo. La BUS se coloca primero y las etiquetas se vuelven a situar al cambiar la vista o exportar.
 - `grafico.py` compone una figura estática con Matplotlib y exporta PNG y SVG.
 - `generar.py` escribe la página de cada indicador, ambas imágenes y sus CSV.
 - `selector.js` actualiza la figura SVG incrustada y rasteriza esa misma versión a PNG de 3.200 × 1.480 px.
