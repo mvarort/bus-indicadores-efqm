@@ -56,7 +56,16 @@
       "prevision": {
         "metodo": "validacion_temporal",
         "entrenamiento_minimo": 5,
-        "escala_ajuste": 1000
+        "escala_ajuste": 1000,
+        "inicio_ajuste": 2022,
+        "modelo_publicado": "Media móvil de 3 años",
+        "inicio_reciente": 2022,
+        "transformacion": "identidad",
+        "transformacion_alternativa": "log",
+        "modelos_transformados": [
+          "Media móvil de 3 años"
+        ],
+        "cambio_nivel": 2020
       },
       "polaridad": "creciente",
       "notas": []
@@ -71,7 +80,15 @@
       "prevision": {
         "metodo": "validacion_temporal",
         "entrenamiento_minimo": 5,
-        "escala_ajuste": 1000
+        "escala_ajuste": 1000,
+        "inicio_ajuste": 2016,
+        "modelo_publicado": "Regresión lineal",
+        "inicio_reciente": 2022,
+        "transformacion": "identidad",
+        "transformacion_alternativa": "log",
+        "modelos_transformados": [
+          "Regresión lineal"
+        ]
       },
       "titulo": "Monografías electrónicas de pago",
       "unidad": "Monografías",
@@ -129,7 +146,15 @@
       "prevision": {
         "metodo": "validacion_temporal",
         "entrenamiento_minimo": 5,
-        "escala_ajuste": 1
+        "escala_ajuste": 1,
+        "inicio_ajuste": 2016,
+        "modelo_publicado": "Media móvil de 3 años",
+        "inicio_reciente": 2022,
+        "transformacion": "identidad",
+        "transformacion_alternativa": "log",
+        "modelos_transformados": [
+          "Media móvil de 3 años"
+        ]
       },
       "titulo": "Personas usuarias por puesto de lectura",
       "unidad": "Personas por puesto",
@@ -189,7 +214,16 @@
       "prevision": {
         "metodo": "validacion_temporal",
         "entrenamiento_minimo": 5,
-        "escala_ajuste": 100
+        "escala_ajuste": 100,
+        "inicio_ajuste": 2016,
+        "modelo_publicado": "Ingenuo",
+        "inicio_reciente": 2022,
+        "transformacion": "logit",
+        "transformacion_alternativa": "logit",
+        "modelos_transformados": [
+          "Ingenuo",
+          "Suavizado exponencial simple"
+        ]
       },
       "titulo": "Porcentaje del gasto en información electrónica",
       "unidad": "Porcentaje del gasto",

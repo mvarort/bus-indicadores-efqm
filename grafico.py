@@ -96,7 +96,7 @@ def rotular_comparacion(fig, ax, hist, formato):
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
-            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False, nota_intervalo=None):
+            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False, nota_intervalo=None, periodo_ajuste=None):
     sufijo = " %" if unidad_porcentual else ""
     def formato(valor):
         return numero(valor, decimales, sufijo)
@@ -215,18 +215,19 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
     fig.add_artist(Line2D([.047, .98], [.155, .155], transform=fig.transFigure,
                           color="#DFE5EC", linewidth=.7))
     descripcion_referencia = "máximo descriptivo anual" if polaridad == "pendiente" else "mejor resultado anual"
+    periodo = f" · ajuste {periodo_ajuste}" if periodo_ajuste else ""
     notas = [
         ("fuente", "Fuente  REBIUN Data Explorer."),
         ("comparacion", f"Benchmark: mediana del grupo comparador, excluida la BUS. Referencia del grupo: {descripcion_referencia}, incluida la BUS. "
          "Banda comparativa: intervalo comprendido entre ambas referencias."),
         ("banda", "La banda no es un intervalo de confianza estadístico ni una zona de excelencia."),
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
-        ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones puntuales sujetas a incertidumbre."),
+        ("prevision", f"Previsión mediante {modelo.lower()}{periodo}. Estimaciones sujetas a incertidumbre."),
     ]
     if nota_intervalo:
         notas.append(("intervalo", "Intervalo de predicción del 95 % nominal (remates grises). Cobertura sin calibrar con esta muestra."))
     elif nota_intervalo is not None:
-        notas.append(("sin-intervalo", "Sin intervalo de predicción defendible para el modelo y los datos disponibles."))
+        notas.append(("sin-intervalo", "Sin intervalo del 95 % defendible con los datos del periodo de ajuste."))
     if not lideres.empty:
         notas.append(("liderazgo", "Círculo rojo: la BUS alcanza el mejor resultado anual, incluidos los empates."))
     notas.extend((f"indicador-{i}", nota) for i, nota in enumerate(notas_indicador))

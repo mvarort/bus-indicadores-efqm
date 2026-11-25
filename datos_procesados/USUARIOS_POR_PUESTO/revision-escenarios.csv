@@ -1,0 +1,51 @@
+﻿escenario;modelo;horizonte;previsto
+Completa;Ingenuo;1;10,997265122265123
+Completa;Ingenuo;2;10,997265122265123
+Completa;Ingenuo;3;10,997265122265123
+Completa;Ingenuo;4;10,997265122265123
+Completa;Ingenuo;5;10,997265122265123
+Reciente;Ingenuo;1;10,997265122265123
+Reciente;Ingenuo;2;10,997265122265123
+Reciente;Ingenuo;3;10,997265122265123
+Reciente;Ingenuo;4;10,997265122265123
+Reciente;Ingenuo;5;10,997265122265123
+Completa;Media móvil de 3 años;1;10,76881570756634
+Completa;Media móvil de 3 años;2;10,91131915871778
+Completa;Media móvil de 3 años;3;10,892466662849747
+Completa;Media móvil de 3 años;4;10,857533843044623
+Completa;Media móvil de 3 años;5;10,887106554870718
+Reciente;Media móvil de 3 años;1;10,76881570756634
+Reciente;Media móvil de 3 años;2;10,91131915871778
+Reciente;Media móvil de 3 años;3;10,892466662849747
+Reciente;Media móvil de 3 años;4;10,857533843044623
+Reciente;Media móvil de 3 años;5;10,887106554870718
+Completa;Regresión lineal;1;10,72575757748862
+Completa;Regresión lineal;2;10,797566900173953
+Completa;Regresión lineal;3;10,869376222859286
+Completa;Regresión lineal;4;10,941185545544618
+Completa;Regresión lineal;5;11,01299486822995
+Reciente;Regresión lineal;1;11,321219107133189
+Reciente;Regresión lineal;2;11,587065170057986
+Reciente;Regresión lineal;3;11,852911232982784
+Reciente;Regresión lineal;4;12,118757295907582
+Reciente;Regresión lineal;5;12,38460335883238
+Completa;Suavizado exponencial simple;1;10,911250690152004
+Completa;Suavizado exponencial simple;2;10,911250690152004
+Completa;Suavizado exponencial simple;3;10,911250690152004
+Completa;Suavizado exponencial simple;4;10,911250690152004
+Completa;Suavizado exponencial simple;5;10,911250690152004
+Reciente;Suavizado exponencial simple;1;10,997265121827201
+Reciente;Suavizado exponencial simple;2;10,997265121827201
+Reciente;Suavizado exponencial simple;3;10,997265121827201
+Reciente;Suavizado exponencial simple;4;10,997265121827201
+Reciente;Suavizado exponencial simple;5;10,997265121827201
+Completa;Holt con tendencia amortiguada;1;11,119973660359358
+Completa;Holt con tendencia amortiguada;2;11,27263125030581
+Completa;Holt con tendencia amortiguada;3;11,394757322262972
+Completa;Holt con tendencia amortiguada;4;11,4924581798287
+Completa;Holt con tendencia amortiguada;5;11,570618865881285
+Transformada;Media móvil de 3 años;1;10,764508495506782
+Transformada;Media móvil de 3 años;2;10,909390456217361
+Transformada;Media móvil de 3 años;3;10,889964447947511
+Transformada;Media móvil de 3 años;4;10,854430715497664
+Transformada;Media móvil de 3 años;5;10,884571407307865

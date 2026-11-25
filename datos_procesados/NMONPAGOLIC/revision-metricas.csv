@@ -1,0 +1,69 @@
+﻿escenario;modelo;horizonte;n;mae;rmse;comparacion
+Completa;Holt con tendencia amortiguada;1;5;44712,91333714589;73880,19270664826;disponibles
+Completa;Holt con tendencia amortiguada;2;4;71040,1453612397;92839,92638903936;disponibles
+Completa;Holt con tendencia amortiguada;3;3;87487,87736029224;111992,96013835543;disponibles
+Completa;Holt con tendencia amortiguada;4;2;132156,6449044927;135104,95317135975;disponibles
+Completa;Holt con tendencia amortiguada;5;1;89936,99354653223;89936,99354653223;disponibles
+Completa;Ingenuo;1;5;71014,0;99975,04141134427;disponibles
+Completa;Ingenuo;2;4;139945,75;151381,23806717264;disponibles
+Completa;Ingenuo;3;3;191557,66666666666;211909,00928700506;disponibles
+Completa;Ingenuo;4;2;279891,5;279932,5615259861;disponibles
+Completa;Ingenuo;5;1;254832,0;254832,0;disponibles
+Completa;Media móvil de 3 años;1;5;114520,99999999996;131873,89896774702;disponibles
+Completa;Media móvil de 3 años;2;4;165823,27777777775;178582,26396636324;disponibles
+Completa;Media móvil de 3 años;3;3;216493,34567901233;228378,8380543977;disponibles
+Completa;Media móvil de 3 años;4;2;307718,0679012345;309587,13284114015;disponibles
+Completa;Media móvil de 3 años;5;1;302845,1646090533;302845,1646090533;disponibles
+Completa;Regresión lineal;1;5;51070,922380952325;68549,91672709321;disponibles
+Completa;Regresión lineal;2;4;61550,466071428644;66861,68680494031;disponibles
+Completa;Regresión lineal;3;3;76589,26507936518;85779,23717243693;disponibles
+Completa;Regresión lineal;4;2;26770,69047619053;27527,941840993808;disponibles
+Completa;Regresión lineal;5;1;62149,299999999814;62149,299999999814;disponibles
+Completa;Suavizado exponencial simple;1;5;71013,99950146381;99975,04127771483;disponibles
+Completa;Suavizado exponencial simple;2;4;139945,7504920066;151381,23863218346;disponibles
+Completa;Suavizado exponencial simple;3;3;191557,667248716;211909,00962464945;disponibles
+Completa;Suavizado exponencial simple;4;2;279891,50021344423;279932,56174822676;disponibles
+Completa;Suavizado exponencial simple;5;1;254832,0007288605;254832,0007288605;disponibles
+Reciente;Ingenuo;1;2;115690,5;144056,22694802194;disponibles
+Reciente;Ingenuo;2;1;171673,0;171673,0;disponibles
+Reciente;Media móvil de 3 años;1;1;109460,66666666663;109460,66666666663;disponibles
+Reciente;Regresión lineal;1;1;106956,33333333326;106956,33333333326;disponibles
+Reciente;Suavizado exponencial simple;1;1;29853,996997013688;29853,996997013688;disponibles
+Transformada;Regresión lineal;1;5;68314,74054886377;72714,79933579786;disponibles
+Transformada;Regresión lineal;2;4;63123,59308815171;71207,62832536332;disponibles
+Transformada;Regresión lineal;3;3;93087,95101615787;114413,21139793831;disponibles
+Transformada;Regresión lineal;4;2;94034,74188411154;94044,11432134874;disponibles
+Transformada;Regresión lineal;5;1;249541,79587524803;249541,79587524803;disponibles
+Completa;Holt con tendencia amortiguada;1;1;7871,006637497223;7871,006637497223;origen_comun_reciente
+Completa;Ingenuo;1;1;29854,0;29854,0;origen_comun_reciente
+Completa;Media móvil de 3 años;1;1;109460,66666666663;109460,66666666663;origen_comun_reciente
+Completa;Regresión lineal;1;1;10581,75;10581,75;origen_comun_reciente
+Completa;Suavizado exponencial simple;1;1;29853,996997013688;29853,996997013688;origen_comun_reciente
+Reciente;Ingenuo;1;1;29854,0;29854,0;origen_comun_reciente
+Reciente;Media móvil de 3 años;1;1;109460,66666666663;109460,66666666663;origen_comun_reciente
+Reciente;Regresión lineal;1;1;106956,33333333326;106956,33333333326;origen_comun_reciente
+Reciente;Suavizado exponencial simple;1;1;29853,996997013688;29853,996997013688;origen_comun_reciente
+Transformada;Regresión lineal;1;1;57466,29578120657;57466,29578120657;origen_comun_reciente
+Completa;Holt con tendencia amortiguada;1;3;56252,78707448634;92619,69010833473;origenes_2022_2024
+Completa;Holt con tendencia amortiguada;2;2;125082,21710358653;129925,93188806849;origenes_2022_2024
+Completa;Holt con tendencia amortiguada;3;1;89936,99350029381;89936,99350029381;origenes_2022_2024
+Completa;Ingenuo;1;3;82090,33333333333;117935,15894337872;origenes_2022_2024
+Completa;Ingenuo;2;2;194045,0;195330,40830602898;origenes_2022_2024
+Completa;Ingenuo;3;1;186563,0;186563,0;origenes_2022_2024
+Completa;Media móvil de 3 años;1;3;139194,4444444444;157645,0876327605;origenes_2022_2024
+Completa;Media móvil de 3 años;2;2;226566,61111111107;229533,2489248696;origenes_2022_2024
+Completa;Media móvil de 3 años;3;1;219630,18518518517;219630,18518518517;origenes_2022_2024
+Completa;Regresión lineal;1;3;59322,05952380947;77063,08036436985;origenes_2022_2024
+Completa;Regresión lineal;2;2;76021,35119047639;81838,04774858868;origenes_2022_2024
+Completa;Regresión lineal;3;1;21973,28571428603;21973,28571428603;origenes_2022_2024
+Completa;Suavizado exponencial simple;1;3;82090,33284605054;117935,1588718906;origenes_2022_2024
+Completa;Suavizado exponencial simple;2;2;194045,00077056896;195330,4091343709;origenes_2022_2024
+Completa;Suavizado exponencial simple;3;1;186563,00131925952;186563,00131925952;origenes_2022_2024
+Reciente;Ingenuo;1;2;115690,5;144056,22694802194;origenes_2022_2024
+Reciente;Ingenuo;2;1;171673,0;171673,0;origenes_2022_2024
+Reciente;Media móvil de 3 años;1;1;109460,66666666663;109460,66666666663;origenes_2022_2024
+Reciente;Regresión lineal;1;1;106956,33333333326;106956,33333333326;origenes_2022_2024
+Reciente;Suavizado exponencial simple;1;1;29853,996997013688;29853,996997013688;origenes_2022_2024
+Transformada;Regresión lineal;1;3;73228,98305701399;74432,08508981964;origenes_2022_2024
+Transformada;Regresión lineal;2;2;32733,180773872475;37052,97038823402;origenes_2022_2024
+Transformada;Regresión lineal;3;1;65823,17167857708;65823,17167857708;origenes_2022_2024

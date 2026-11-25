@@ -5,6 +5,7 @@ from scipy.stats import t
 from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 
 from prevision import MODELOS
+from revision_predictiva import invertir, transformar
 
 NIVEL = .95
 
@@ -54,15 +55,23 @@ def intervalo(modelo, y, horizonte, limites):
     return np.clip(extremos, *limites) if limites != (None, None) else extremos
 
 
-def evaluar_intervalos(serie, modelo, horizonte, limites, entrenamiento_minimo, escala_ajuste):
+def evaluar_intervalos(serie, modelo, horizonte, limites, entrenamiento_minimo, escala_ajuste,
+                       transformacion="identidad"):
     """Evalúa el modelo elegido en orígenes expansivos y separa los no estimables."""
     y = serie.to_numpy(dtype=float) / escala_ajuste
     limites_escalados = tuple(v / escala_ajuste if v is not None else None for v in limites)
-    final = intervalo(modelo, y, horizonte, limites_escalados) * escala_ajuste
+    y = transformar(y, transformacion, limites_escalados)
+    dominio = limites_escalados if transformacion == "identidad" else (None, None)
+
+    def extremos_en_unidades(muestra, pasos):
+        extremos = intervalo(modelo, muestra, pasos, dominio)
+        return invertir(extremos, transformacion, limites_escalados) * escala_ajuste
+
+    final = extremos_en_unidades(y, horizonte)
     filas = []
     for corte in range(entrenamiento_minimo, len(y)):
         h = min(horizonte, len(y) - corte)
-        extremos = intervalo(modelo, y[:corte], h, limites_escalados) * escala_ajuste
+        extremos = extremos_en_unidades(y[:corte], h)
         for paso, (inf, sup) in enumerate(extremos, 1):
             real = serie.iloc[corte + paso - 1]
             cubierto = bool(inf <= real <= sup) if np.isfinite(inf) and np.isfinite(sup) else None

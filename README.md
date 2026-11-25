@@ -26,6 +26,8 @@ y añade `grafica-5.png`, `grafica-5.svg` y `serie-5.csv`. La casilla
 de nivel nominal. `validacion-intervalos.csv` y
 `cobertura-intervalos.csv` documentan la validación retrospectiva.
 
+La ventana de ajuste se configura por indicador y figura en la lámina. En préstamos se usa 2022–2025 y se indica expresamente que el intervalo no es estimable con ese periodo. Los CSV `revision-*.csv` documentan los candidatos y `ajuste-publicado.csv` identifica el modelo vigente. Los cinco métodos de serie completa siguen disponibles como contraste histórico en `seleccion.csv`.
+
 ## Instalación y generación
 
 Con Python 3.11:

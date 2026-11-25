@@ -1,0 +1,12 @@
+﻿escenario;modelo;transformacion;inicio;fin;n_ajuste;minimo_ajuste;ruptura;estimable
+Completa;Ingenuo;identidad;2016;2025;10;5;;True
+Reciente;Ingenuo;identidad;2022;2025;4;2;;True
+Completa;Media móvil de 3 años;identidad;2016;2025;10;5;;True
+Reciente;Media móvil de 3 años;identidad;2022;2025;4;3;;True
+Completa;Regresión lineal;identidad;2016;2025;10;5;;True
+Reciente;Regresión lineal;identidad;2022;2025;4;3;;True
+Completa;Suavizado exponencial simple;identidad;2016;2025;10;5;;True
+Reciente;Suavizado exponencial simple;identidad;2022;2025;4;3;;True
+Completa;Holt con tendencia amortiguada;identidad;2016;2025;10;5;;True
+Reciente;Holt con tendencia amortiguada;identidad;2022;2025;4;5;;False
+Transformada;Regresión lineal;log;2016;2025;10;5;;True

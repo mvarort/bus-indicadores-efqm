@@ -274,11 +274,14 @@ class Indicadores(unittest.TestCase):
                 futuro = largo.loc[2026:]
                 self.assertEqual(list(futuro.index), list(range(2026, 2031)))
                 li, ls = futuro.prediccion_inferior_95, futuro.prediccion_superior_95
-                self.assertTrue((li <= futuro.prevision).all() and (futuro.prevision <= ls).all())
                 minimo, maximo = ajuste["limites_naturales"]
-                self.assertTrue(li.ge(minimo).all())
-                if maximo is not None:
-                    self.assertTrue(ls.le(maximo).all())
+                if codigo == "NPRESTDOMIC":
+                    self.assertTrue(li.isna().all() and ls.isna().all())
+                else:
+                    self.assertTrue((li <= futuro.prevision).all() and (futuro.prevision <= ls).all())
+                    self.assertTrue(li.ge(minimo).all())
+                    if maximo is not None:
+                        self.assertTrue(ls.le(maximo).all())
                 self.assertTrue(largo.loc[:2025, ["prediccion_inferior_95", "prediccion_superior_95"]]
                                 .isna().all().all())
                 for col, clave in [("meta", "metas"), ("limite", "limites")]:
@@ -289,7 +292,7 @@ class Indicadores(unittest.TestCase):
                 for h, casos in detalle.groupby("horizonte"):
                     validos = casos.dropna(subset=["inferior", "superior"])
                     self.assertEqual(len(validos), resumen.loc[h, "estimables"])
-                    self.assertEqual(len(casos), 6 - h)
+                    self.assertEqual(len(casos), 1 if codigo == "NPRESTDOMIC" else 6 - h)
                     self.assertEqual(int(validos.observado.between(validos.inferior, validos.superior).sum()),
                                      resumen.loc[h, "cubiertos"])
                     self.assertTrue(all(real == largo.loc[origen + h, "bus"]
@@ -297,9 +300,32 @@ class Indicadores(unittest.TestCase):
                 self.assertIn('data-horizonte="3"', (carpeta / "index.html").read_text())
                 self.assertIn('data-horizonte="5"', (carpeta / "5.html").read_text())
                 svg = (carpeta / "grafica-5.svg").read_text()
-                self.assertIn('id="serie-prediction_interval-2030"', svg)
                 self.assertIn('id="serie-bus_forecast-punto"', svg)
-                self.assertIn("95 % nominal", svg)
+                if codigo == "NPRESTDOMIC":
+                    self.assertNotIn('id="serie-prediction_interval-2030"', svg)
+                    self.assertIn("Sin intervalo del 95 % defendible", svg)
+                    self.assertIn("2022–2025 (n=4)", svg)
+                else:
+                    self.assertIn('id="serie-prediction_interval-2030"', svg)
+                    self.assertIn("95 % nominal", svg)
+                    self.assertIn("2016–2025 (n=10)", svg)
+
+    def test_revision_predictiva(self):
+        carpeta = self.distribucion
+        leer = lambda ruta: pd.read_csv(ruta, sep=";", decimal=",")
+        ajuste = leer(carpeta / "ajuste-publicado.csv").iloc[0]
+        self.assertEqual((ajuste.inicio, ajuste.fin, ajuste.n_ajuste), (2022, 2025, 4))
+        detalle = leer(carpeta / "revision-errores.csv")
+        reciente = detalle.loc[detalle.escenario.eq("Reciente")]
+        self.assertTrue((reciente.n_ajuste == reciente.origen - 2022 + 1).all())
+        comun = leer(carpeta / "revision-metricas.csv").query("comparacion == 'origen_comun_reciente'")
+        self.assertEqual(set(comun.escenario), {"Completa", "Reciente", "Cambio de nivel", "Transformada"})
+        self.assertTrue(comun.n.eq(1).all() and comun.horizonte.eq(1).all())
+        futuros = leer(carpeta / "revision-escenarios.csv")
+        paso = futuros.query("escenario == 'Cambio de nivel'")
+        np.testing.assert_allclose(paso.previsto, self.serie.loc[2020:2025, "bus"].mean())
+        gasto = leer(carpeta.parent / "PCT_GASTO_ELECTRONICO" / "ajuste-publicado.csv").iloc[0]
+        self.assertEqual((gasto.modelo, gasto.transformacion), ("Ingenuo", "logit"))
 
     def test_intervalo_lineal_para_nueva_observacion(self):
         y = np.array([14., 12., 16., 17., 18., 21., 22.])

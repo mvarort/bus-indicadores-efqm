@@ -1,0 +1,56 @@
+﻿escenario;modelo;horizonte;previsto
+Completa;Ingenuo;1;88,99984599633099
+Completa;Ingenuo;2;88,99984599633099
+Completa;Ingenuo;3;88,99984599633099
+Completa;Ingenuo;4;88,99984599633099
+Completa;Ingenuo;5;88,99984599633099
+Reciente;Ingenuo;1;88,99984599633099
+Reciente;Ingenuo;2;88,99984599633099
+Reciente;Ingenuo;3;88,99984599633099
+Reciente;Ingenuo;4;88,99984599633099
+Reciente;Ingenuo;5;88,99984599633099
+Completa;Media móvil de 3 años;1;87,9251977109928
+Completa;Media móvil de 3 años;2;88,2089711816456
+Completa;Media móvil de 3 años;3;88,3780049629898
+Completa;Media móvil de 3 años;4;88,17072461854275
+Completa;Media móvil de 3 años;5;88,25256692105938
+Reciente;Media móvil de 3 años;1;87,9251977109928
+Reciente;Media móvil de 3 años;2;88,2089711816456
+Reciente;Media móvil de 3 años;3;88,3780049629898
+Reciente;Media móvil de 3 años;4;88,17072461854275
+Reciente;Media móvil de 3 años;5;88,25256692105938
+Completa;Regresión lineal;1;90,39113166428727
+Completa;Regresión lineal;2;91,35324070193307
+Completa;Regresión lineal;3;92,31534973957886
+Completa;Regresión lineal;4;93,27745877722468
+Completa;Regresión lineal;5;94,23956781487047
+Reciente;Regresión lineal;1;89,46868071524692
+Reciente;Regresión lineal;2;90,20217364806972
+Reciente;Regresión lineal;3;90,93566658089253
+Reciente;Regresión lineal;4;91,66915951371534
+Reciente;Regresión lineal;5;92,40265244653814
+Completa;Suavizado exponencial simple;1;88,99984597698965
+Completa;Suavizado exponencial simple;2;88,99984597698965
+Completa;Suavizado exponencial simple;3;88,99984597698965
+Completa;Suavizado exponencial simple;4;88,99984597698965
+Completa;Suavizado exponencial simple;5;88,99984597698965
+Reciente;Suavizado exponencial simple;1;88,99984597698965
+Reciente;Suavizado exponencial simple;2;88,99984597698965
+Reciente;Suavizado exponencial simple;3;88,99984597698965
+Reciente;Suavizado exponencial simple;4;88,99984597698965
+Reciente;Suavizado exponencial simple;5;88,99984597698965
+Completa;Holt con tendencia amortiguada;1;89,6335371622152
+Completa;Holt con tendencia amortiguada;2;90,2640598820719
+Completa;Holt con tendencia amortiguada;3;90,89142998832932
+Completa;Holt con tendencia amortiguada;4;91,51566324405546
+Completa;Holt con tendencia amortiguada;5;92,13677533350295
+Transformada;Ingenuo;1;88,99984599633099
+Transformada;Ingenuo;2;88,99984599633099
+Transformada;Ingenuo;3;88,99984599633099
+Transformada;Ingenuo;4;88,99984599633099
+Transformada;Ingenuo;5;88,99984599633099
+Transformada;Suavizado exponencial simple;1;88,99984597791614
+Transformada;Suavizado exponencial simple;2;88,99984597791614
+Transformada;Suavizado exponencial simple;3;88,99984597791614
+Transformada;Suavizado exponencial simple;4;88,99984597791614
+Transformada;Suavizado exponencial simple;5;88,99984597791614

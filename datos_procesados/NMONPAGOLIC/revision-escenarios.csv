@@ -1,0 +1,51 @@
+﻿escenario;modelo;horizonte;previsto
+Completa;Ingenuo;1;1024655,0
+Completa;Ingenuo;2;1024655,0
+Completa;Ingenuo;3;1024655,0
+Completa;Ingenuo;4;1024655,0
+Completa;Ingenuo;5;1024655,0
+Reciente;Ingenuo;1;1024655,0
+Reciente;Ingenuo;2;1024655,0
+Reciente;Ingenuo;3;1024655,0
+Reciente;Ingenuo;4;1024655,0
+Reciente;Ingenuo;5;1024655,0
+Completa;Media móvil de 3 años;1;977382,0
+Completa;Media móvil de 3 años;2;1018848,6666666666
+Completa;Media móvil de 3 años;3;1006961,8888888889
+Completa;Media móvil de 3 años;4;1001064,1851851852
+Completa;Media móvil de 3 años;5;1008958,2469135803
+Reciente;Media móvil de 3 años;1;977382,0
+Reciente;Media móvil de 3 años;2;1018848,6666666666
+Reciente;Media móvil de 3 años;3;1006961,8888888889
+Reciente;Media móvil de 3 años;4;1001064,1851851852
+Reciente;Media móvil de 3 años;5;1008958,2469135803
+Completa;Regresión lineal;1;1090553,133333333
+Completa;Regresión lineal;2;1149525,03030303
+Completa;Regresión lineal;3;1208496,927272727
+Completa;Regresión lineal;4;1267468,824242424
+Completa;Regresión lineal;5;1326440,721212121
+Reciente;Regresión lineal;1;1132863,5
+Reciente;Regresión lineal;2;1208985,1
+Reciente;Regresión lineal;3;1285106,7
+Reciente;Regresión lineal;4;1361228,3000000003
+Reciente;Regresión lineal;5;1437349,9000000001
+Completa;Suavizado exponencial simple;1;1024655,0004448593
+Completa;Suavizado exponencial simple;2;1024655,0004448593
+Completa;Suavizado exponencial simple;3;1024655,0004448593
+Completa;Suavizado exponencial simple;4;1024655,0004448593
+Completa;Suavizado exponencial simple;5;1024655,0004448593
+Reciente;Suavizado exponencial simple;1;1025754,5344531036
+Reciente;Suavizado exponencial simple;2;1025754,5344531036
+Reciente;Suavizado exponencial simple;3;1025754,5344531036
+Reciente;Suavizado exponencial simple;4;1025754,5344531036
+Reciente;Suavizado exponencial simple;5;1025754,5344531036
+Completa;Holt con tendencia amortiguada;1;1092899,5821256214
+Completa;Holt con tendencia amortiguada;2;1157466,5053868336
+Completa;Holt con tendencia amortiguada;3;1221710,59403174
+Completa;Holt con tendencia amortiguada;4;1285633,4622334216
+Completa;Holt con tendencia amortiguada;5;1349236,7160940948
+Transformada;Regresión lineal;1;1148542,3236164355
+Transformada;Regresión lineal;2;1242237,8043998436
+Transformada;Regresión lineal;3;1343576,7502421534
+Transformada;Regresión lineal;4;1453182,6977069038
+Transformada;Regresión lineal;5;1571730,0500578885
