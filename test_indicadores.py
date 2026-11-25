@@ -4,7 +4,6 @@ import json
 import os
 import statistics
 import unittest
-from itertools import combinations
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -120,9 +119,15 @@ class Indicadores(unittest.TestCase):
         fig.canvas.draw()
         renderer = fig.canvas.get_renderer()
         etiquetas = [t for t in ax.texts if hasattr(t, "xy") and t.get_visible()]
-        self.assertEqual(len(etiquetas), 59)
-        self.assertFalse(any(a.overlaps(b) for a, b in combinations(
-            (t.get_window_extent(renderer) for t in etiquetas), 2)))
+        rectangulos = [*barras[1].patches, *barras[4].patches]
+        self.assertEqual(len(etiquetas), 13)
+        for etiqueta, rect in zip(etiquetas, rectangulos):
+            self.assertEqual(etiqueta.get_rotation(), 90)
+            self.assertEqual(etiqueta.get_text(), numero(rect.get_height()))
+            caja = etiqueta.get_window_extent(renderer)
+            barra = rect.get_window_extent(renderer)
+            self.assertTrue(barra.contains(caja.x0, caja.y0))
+            self.assertTrue(barra.contains(caja.x1, caja.y1))
 
     def test_archivos_estaticos(self):
         html = (self.distribucion / "index.html").read_text(encoding="utf-8")

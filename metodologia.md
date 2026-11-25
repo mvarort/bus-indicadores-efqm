@@ -75,7 +75,8 @@ Las metas y límites de 2016–2028 están en la configuración y son
 ilustrativos. En la lámina, la zona azul parte de cero y termina en la
 mediana. La zona amarilla parte de la mediana y termina en el mejor
 resultado anual. El PNG integra estas definiciones, la nota de
-incertidumbre y las cifras para poder interpretarlo fuera de la web.
+incertidumbre y las cifras BUS en vertical dentro de sus barras. Los
+valores exactos de metas, límites y comparaciones están en el CSV.
 
 ## Referencias de trabajo
 

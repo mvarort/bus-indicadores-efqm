@@ -27,15 +27,16 @@ def barras(ax, valores, desplazamiento, ancho, nombre, **estilo):
     return ax.bar(valores.index + desplazamiento, valores, width=ancho, label=nombre, **estilo)
 
 
-def rotular(ax, valores, desplazamiento, color, size, peso="normal", offset=4, bbox=None, lateral=0):
-    etiquetas = []
+def rotular_bus(ax, valores, futuro=False):
+    """Sitúa el valor en vertical dentro de cada barra observada o prevista."""
+    color = "#85122A" if futuro else "white"
+    fondo = dict(facecolor=ROSADO, edgecolor="none", boxstyle="round,pad=.20") if futuro else None
     for year, value in valores.items():
-        etiquetas.append(ax.annotate(
-            numero(value), (year + desplazamiento, value),
-            xytext=(lateral, offset), textcoords="offset points", ha="center",
-            va="bottom", fontsize=size, fontweight=peso, color=color, zorder=7, bbox=bbox,
-        ))
-    return etiquetas
+        ax.annotate(
+            numero(value), (year, value), xytext=(0, -7), textcoords="offset points",
+            ha="center", va="top", rotation=90, fontsize=9.5, fontweight="bold",
+            color=color, bbox=fondo, zorder=7,
+        )
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
@@ -84,16 +85,8 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
         ax.text(centro, 1.025, nombre, transform=ax.get_xaxis_transform(),
                 size=10, weight="semibold", color=SECUNDARIO, ha="center")
 
-    principales = rotular(ax, hist.bus, 0, TINTA, 9, "bold")
-    principales += rotular(ax, fut.prevision, 0, TINTA, 9, "bold")
-    secundarias = [
-        rotular(ax, panel.limite, -.30, LIMITE, 7.1, offset=3, lateral=-2),
-        rotular(ax, panel.meta, .30, "#215F26", 7.1, offset=3, lateral=2),
-        rotular(ax, comparables.benchmark, 0, "#264458", 7.4, offset=2,
-                bbox=dict(facecolor=AZUL, edgecolor="none", boxstyle="round,pad=.16")),
-        rotular(ax, comparables.referencia, 0, "#675218", 7.1, offset=3),
-    ]
-    separar_etiquetas(fig, principales, secundarias)
+    rotular_bus(ax, hist.bus)
+    rotular_bus(ax, fut.prevision, futuro=True)
 
     fig.text(.047, .941, titulo, fontsize=23, weight="bold", color=TINTA, va="top")
     fig.text(.048, .878, subtitulo, fontsize=11, color=SECUNDARIO, va="top")
@@ -119,24 +112,6 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
              "Estimaciones sujetas a incertidumbre, sin intervalo de predicción calibrado.",
              fontsize=9, color=SECUNDARIO, va="top")
     return fig
-
-
-def separar_etiquetas(fig, principales, secundarias):
-    """Mantiene las cifras BUS fijas y desplaza etiquetas secundarias si colisionan."""
-    fig.canvas.draw()
-    renderer = fig.canvas.get_renderer()
-    ocupadas = [e.get_window_extent(renderer).expanded(1.08, 1.08) for e in principales]
-    for grupo in secundarias:
-        for etiqueta in grupo:
-            lateral, inicial = etiqueta.get_position()
-            for dy in (0, 10, 20, -13, 30, -23):
-                etiqueta.set_position((lateral, inicial + dy))
-                caja = etiqueta.get_window_extent(renderer).expanded(1.08, 1.08)
-                if not any(caja.overlaps(otra) for otra in ocupadas):
-                    ocupadas.append(caja)
-                    break
-            else:
-                etiqueta.set_visible(False)
 
 
 def exportar(fig, destino):
