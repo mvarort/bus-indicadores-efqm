@@ -4,12 +4,15 @@ import json
 import os
 import statistics
 import unittest
+from itertools import combinations
 from pathlib import Path
 from urllib.request import urlopen
 
+from matplotlib.colors import to_rgba
 import pandas as pd
+from PIL import Image
 
-from grafico import grafico, numero
+from grafico import AMARILLO, AZUL, BUS, LIMITE, META, grafico, numero
 
 
 class Indicadores(unittest.TestCase):
@@ -58,11 +61,12 @@ class Indicadores(unittest.TestCase):
     def test_prevision_metas_y_validacion(self):
         futuro = self.serie.loc[2026:2028]
         self.assertTrue(futuro[["bus", "benchmark", "referencia"]].isna().all().all())
-        self.assertTrue(self.serie.loc[:2025, ["prevision", "meta", "limite"]].isna().all().all())
+        self.assertTrue(self.serie.loc[:2025, "prevision"].isna().all())
+        config = self.config["indicadores"]["NPRESTDOMIC"]
+        for col, clave in [("meta", "metas"), ("limite", "limites")]:
+            self.assertEqual(self.serie[col].to_dict(), {int(y): v for y, v in config[clave].items()})
+        self.assertTrue(self.serie.naturaleza_plan.eq("Ilustrativo").all())
         self.assertEqual(list(futuro.prevision), [365118, 348660, 354793])
-        html = (self.distribucion / "index.html").read_text()
-        self.assertIn("<strong>365.118</strong><small>Previsión central", html)
-        self.assertTrue(futuro.naturaleza_plan.eq("Ilustrativo").all())
         errores = pd.read_csv(self.distribucion / "errores-validacion.csv", sep=";", decimal=",")
         metricas = pd.read_csv(self.distribucion / "validacion.csv", sep=";", decimal=",")
         self.assertEqual(len(metricas), 15)
@@ -77,14 +81,62 @@ class Indicadores(unittest.TestCase):
         self.assertEqual(metricas.groupby("modelo").mae.mean().idxmin(), "Media móvil de 3 años")
 
     def test_notacion_visual(self):
-        fig = grafico(self.serie, 2025, "Préstamos", True)
-        banda, limite, bus, prevision, meta = fig.data
-        self.assertEqual((limite.width, bus.width, meta.width), (.2, .4, .2))
-        self.assertLess(limite.x[0], prevision.x[0])
-        self.assertGreater(meta.x[0], prevision.x[0])
-        self.assertEqual(prevision.marker.pattern.shape, "/")
-        self.assertEqual(limite.marker.line.color, "#512060")
-        self.assertEqual(meta.marker.line.color, "#388E3C")
-        self.assertEqual(max(banda.x), 2025)
-        self.assertEqual(fig.layout.yaxis.range[0], 0)
+        config = self.config["indicadores"]["NPRESTDOMIC"]
+        fig = grafico(self.serie, 2025, config["titulo"], config["subtitulo"],
+                      "Préstamos", "Media móvil de 3 años", True)
+        ax = fig.axes[0]
+        mediana, referencia, *barras = ax.containers
+        for grupo, col, color in [(mediana, "benchmark", AZUL), (referencia, "referencia", AMARILLO)]:
+            self.assertEqual(len(grupo), 10)
+            for year, rect in zip(range(2016, 2026), grupo.patches):
+                self.assertAlmostEqual(rect.get_x() + rect.get_width() / 2, year)
+                self.assertEqual(rect.get_y() + rect.get_height(), self.serie.loc[year, col])
+                self.assertEqual(rect.get_y(), 0 if col == "benchmark" else self.serie.loc[year, "benchmark"])
+                self.assertEqual(rect.get_facecolor(), to_rgba(color))
+                self.assertLess(rect.get_zorder(), barras[0].patches[0].get_zorder())
+        for futuro, grupos in [(False, barras[:3]), (True, barras[3:])]:
+            panel = self.serie.loc[2026:] if futuro else self.serie.loc[:2025]
+            for grupo, col, ancho, offset, color in zip(
+                grupos, ("limite", "prevision" if futuro else "bus", "meta"),
+                (.18, .36, .18), (-.30, 0, .30), (LIMITE, BUS, META),
+            ):
+                self.assertEqual(len(grupo), len(panel))
+                for (year, val), rect in zip(panel[col].items(), grupo.patches):
+                    self.assertEqual(rect.get_height(), val)
+                    self.assertEqual(rect.get_y(), 0)
+                    self.assertAlmostEqual(rect.get_width(), ancho)
+                    self.assertAlmostEqual(rect.get_x() + rect.get_width() / 2, year + offset)
+                    if futuro:
+                        self.assertEqual(rect.get_edgecolor(), to_rgba(color))
+                        if col != "prevision":
+                            self.assertEqual(rect.get_facecolor()[-1], 0)
+                        else:
+                            self.assertEqual(rect.get_hatch(), "///")
+                    else:
+                        self.assertEqual(rect.get_facecolor(), to_rgba(color))
+        self.assertEqual(ax.get_ylim()[0], 0)
+        self.assertEqual(len(ax.lines), 1)
         self.assertEqual(numero(435759.5), "435.759,5")
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
+        etiquetas = [t for t in ax.texts if hasattr(t, "xy") and t.get_visible()]
+        self.assertEqual(len(etiquetas), 59)
+        self.assertFalse(any(a.overlaps(b) for a, b in combinations(
+            (t.get_window_extent(renderer) for t in etiquetas), 2)))
+
+    def test_archivos_estaticos(self):
+        html = (self.distribucion / "index.html").read_text(encoding="utf-8")
+        self.assertIn("<h1>Indicadores EFQM 2028</h1>", html)
+        self.assertIn('<img src="grafica.png"', html)
+        for accesorio in ["<script", "<button", "<table", "<details", "<fieldset", "<article"]:
+            self.assertNotIn(accesorio, html)
+        with Image.open(self.distribucion / "grafica.png") as png:
+            self.assertEqual(png.size, (3200, 1480))
+        svg = (self.distribucion / "grafica.svg").read_text(encoding="utf-8")
+        for contenido in [
+            "Préstamos domiciliarios de material bibliográfico", "más de 40.000",
+            "REBIUN Data Explorer", "mediana del grupo", "mejor resultado anual",
+            "Metas y límites ilustrativos", "media móvil de 3 años", "incertidumbre",
+            "350.602", "365.118", "354.793",
+        ]:
+            self.assertIn(contenido, svg)

@@ -71,7 +71,11 @@ objetivo. Entre tres y cinco errores por horizonte, junto con el cambio
 de nivel histórico, impiden calibrar con fiabilidad intervalos de
 predicción empíricos. Se publican estimaciones puntuales con esta
 limitación. Mediana y referencia del grupo se muestran solo en el histórico.
-Las metas y límites están en la configuración y son ilustrativos.
+Las metas y límites de 2016–2028 están en la configuración y son
+ilustrativos. En la lámina, la zona azul parte de cero y termina en la
+mediana. La zona amarilla parte de la mediana y termina en el mejor
+resultado anual. El PNG integra estas definiciones, la nota de
+incertidumbre y las cifras para poder interpretarlo fuera de la web.
 
 ## Referencias de trabajo
 
