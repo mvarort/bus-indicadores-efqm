@@ -107,14 +107,20 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
     hist = panel.loc[:fin]
     fut = panel.loc[fin + 1:]
     banda = ax.fill_between(hist.index, hist.benchmark, hist.referencia,
-                           color=AZUL, alpha=ALFA_BANDA, linewidth=0, zorder=0)
+                           color=AZUL, alpha=ALFA_BANDA, linewidth=0, zorder=1)
     banda.set_gid("serie-comparison_band-historico")
-    for serie, columna, color, trazo in [
-        ("benchmark", "benchmark", BENCHMARK, TRAZO_BENCHMARK),
-        ("reference", "referencia", REFERENCIA, "-"),
+    referencias = {}
+    for serie, columna, nombre, color, trazo in [
+        ("benchmark", "benchmark", "Benchmark", BENCHMARK, TRAZO_BENCHMARK),
+        ("reference", "referencia", "Referencia del grupo", REFERENCIA, "-"),
     ]:
-        linea, = ax.plot(hist.index, hist[columna], color=color, linewidth=1.65, linestyle=trazo, zorder=2)
+        linea, = ax.plot(
+            hist.index, hist[columna], label=nombre, color=color, linestyle=trazo,
+            linewidth=1.1, marker="o", markersize=4, markerfacecolor="white",
+            markeredgecolor=color, markeredgewidth=.85, zorder=4,
+        )
         linea.set_gid(f"serie-{serie}-historico")
+        referencias[serie] = linea
 
     for periodo, futuro, grupo in [(hist, False, BARRAS[0]), (fut, True, BARRAS[1])]:
         for (serie, columna, ancho, color), desplazamiento in zip(grupo, (-.30, 0, .30)):
@@ -140,7 +146,8 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: numero(value, decimales if decimales and not unidad_porcentual else None, sufijo)))
     ax.tick_params(axis="both", length=0, pad=8, colors=SECUNDARIO, labelsize=9)
-    ax.grid(axis="y", color="#DFE5EC", linewidth=.65, zorder=1)
+    ax.set_axisbelow(True)
+    ax.grid(axis="y", color="#DFE5EC", linewidth=.65)
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.spines["bottom"].set_color("#AEBAC8")
     ax.axvline(fin + .5, color="#AEBAC8", linewidth=.8, linestyle=(0, (2, 4)), zorder=2)
@@ -159,8 +166,8 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
         ("bus_actual", Patch(facecolor=BUS, label="BUS")),
         ("target", Patch(facecolor=META, label="Meta")),
         ("bus_forecast", Patch(facecolor=ROSADO, edgecolor=BUS, hatch="///", label="Previsión BUS")),
-        ("benchmark", Line2D([], [], color=BENCHMARK, linewidth=1.65, linestyle=TRAZO_BENCHMARK, label="Benchmark")),
-        ("reference", Line2D([], [], color=REFERENCIA, linewidth=1.65, label="Referencia del grupo")),
+        ("benchmark", referencias["benchmark"]),
+        ("reference", referencias["reference"]),
         ("comparison_band", Patch(facecolor=AZUL, alpha=ALFA_BANDA, label="Banda comparativa")),
     ]
     leyenda = fig.legend(handles=[handle for _, handle in elementos],

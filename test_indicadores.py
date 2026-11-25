@@ -120,12 +120,19 @@ class Indicadores(unittest.TestCase):
             self.assertEqual(list(linea.get_xdata()), list(hist.index))
             self.assertEqual(list(linea.get_ydata()), list(hist[col]))
             self.assertEqual(linea.get_color(), color)
-            self.assertLess(linea.get_zorder(), barras[0].patches[0].get_zorder())
+            self.assertGreater(linea.get_zorder(), barras[0].patches[0].get_zorder())
+            self.assertEqual((linea.get_marker(), linea.get_markerfacecolor(), linea.get_markeredgecolor()),
+                             ("o", "white", color))
+            muestra = next(h for h in fig.legends[0].legend_handles if h.get_label() == linea.get_label())
+            for atributo in ("linestyle", "marker", "markersize", "markerfacecolor", "markeredgecolor"):
+                lector = f"get_{atributo}"
+                self.assertEqual(getattr(muestra, lector)(), getattr(linea, lector)())
         self.assertTrue(ax.lines[0].is_dashed())
         self.assertFalse(ax.lines[1].is_dashed())
         banda, = ax.collections
         self.assertEqual(tuple(banda.get_facecolor()[0]), to_rgba(AZUL, ALFA_BANDA))
-        self.assertLess(banda.get_zorder(), ax.lines[0].get_zorder())
+        self.assertLess(ax.yaxis.get_zorder(), banda.get_zorder())
+        self.assertLess(banda.get_zorder(), barras[0].patches[0].get_zorder())
         puntos = {tuple(p) for p in banda.get_paths()[0].vertices}
         self.assertEqual({x for x, _ in puntos}, set(hist.index))
         for y, fila in hist.iterrows():
@@ -159,6 +166,7 @@ class Indicadores(unittest.TestCase):
         rectangulos = [*barras[1].patches, *barras[4].patches]
         self.assertEqual(len(etiquetas), 13)
         for etiqueta, rect in zip(etiquetas, rectangulos):
+            self.assertGreater(etiqueta.get_zorder(), ax.lines[0].get_zorder())
             self.assertEqual(etiqueta.get_rotation(), 90)
             self.assertEqual(etiqueta.get_text(), numero(rect.get_height()))
             caja = etiqueta.get_window_extent(renderer)
