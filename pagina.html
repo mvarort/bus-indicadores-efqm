@@ -36,11 +36,14 @@ button { padding: 7px 10px; border: 1px solid #b1c0d1; background: white; border
 </head>
 <body>
 <header><h1>Indicadores EFQM 2028</h1></header>
-<main>
+<main data-codigo="$codigo" data-horizonte="$horizonte" data-archivo-horizonte="$archivo_horizonte">
 <div class="indicador"><label for="indicador">Indicador</label>
-<select id="indicador">$indicadores</select></div>
+<select id="indicador">$indicadores</select>
+<label for="horizonte">Prospectiva</label>
+<select id="horizonte">$horizontes</select></div>
 <section id="opciones" aria-label="Elementos gráficos">
 $controles
+<label><input type="checkbox" name="prediction_interval" checked$intervalo_control> Intervalo de predicción (95 %)</label>
 <div><button id="descargar" type="button">Descargar imagen PNG</button>
 <button id="restablecer" type="button">Restablecer selección</button></div>
 <p id="estado" role="status"></p>

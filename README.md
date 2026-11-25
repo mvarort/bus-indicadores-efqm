@@ -19,7 +19,12 @@ Usa el desplegable para cambiar la lámina. La siguiente página recibe
 la selección de series y cifras, y «Descargar imagen PNG» recoge el
 indicador y los elementos visibles en ese momento. Cada carpeta pública
 incluye `grafica.png`, `grafica.svg`, `serie.csv` y los CSV de grupo y
-validación.
+validación. Usa el selector «Prospectiva» para alternar 2026–2028
+(predeterminado) y 2026–2030. El horizonte largo se abre en `5.html`
+y añade `grafica-5.png`, `grafica-5.svg` y `serie-5.csv`. La casilla
+«Intervalo de predicción (95 %)» controla las barras de error grises
+de nivel nominal. `validacion-intervalos.csv` y
+`cobertura-intervalos.csv` documentan la validación retrospectiva.
 
 ## Instalación y generación
 
@@ -43,7 +48,7 @@ Abre http://localhost:8000. El generador obtiene los CSV públicos de la revisi�
 - `grafico.py` compone una figura estática con Matplotlib y exporta PNG y SVG.
 - `generar.py` escribe la página de cada indicador, ambas imágenes y sus CSV.
 - `selector.js` actualiza la figura SVG incrustada y rasteriza esa misma versión a PNG de 3.200 × 1.480 px.
-- `indicadores.json` contiene periodo, revisión de origen, regla del grupo y metas y límites por indicador y año. Los valores incluidos para 2016–2028 son ilustrativos. Cuando existan valores oficiales, sustituye las dos series completas y actualiza `ilustrativos`.
+- `indicadores.json` contiene periodo, revisión de origen, regla del grupo y metas y límites por indicador y año. Los valores incluidos para 2016–2030 son ilustrativos. Cuando existan valores oficiales, sustituye las dos series completas y actualiza `ilustrativos`.
 
 El generador reutiliza esta composición para indicadores anuales de escala no negativa. Añade una clave de indicador con variable REBIUN o fórmula de razón, título, subtítulo, unidad, precisión, polaridad, límites naturales, configuración predictiva, notas y metas y límites por año. Usa `mejor: max` para polaridad creciente y `mejor: min` para decreciente. Si la polaridad está pendiente, documenta explícitamente una referencia descriptiva. Revisa la idoneidad estadística y comparativa para cada incorporación. Los contrastes automatizados cubren las cuatro series de la revisión publicada.
 

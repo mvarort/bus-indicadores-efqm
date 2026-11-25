@@ -12,6 +12,7 @@ import pandas as pd
 from datos import cargar, preparar
 from grafico import BARRAS, CONTROLES, ETIQUETAS_INICIALES, SEPARACION, exportar, grafico
 from prevision import evaluar
+from intervalos import METODOS, evaluar_intervalos
 
 
 def csv(df, salida, nombre, index=False):
@@ -26,13 +27,20 @@ def pagina(config, codigo, datos, centros, root, version_selector):
     prevision = ajuste["prevision"]
     if prevision["metodo"] != "validacion_temporal":
         raise ValueError(f"{codigo}: método de previsión no admitido")
+    horizonte_maximo = max(config["horizontes"])
     modelo, pred, metricas, errores, ranking = evaluar(
-        hist.bus, config["horizonte"], limites=(minimo, maximo),
+        hist.bus, horizonte_maximo, limites=(minimo, maximo), horizonte_seleccion=config["horizonte"],
         entrenamiento_minimo=prevision["entrenamiento_minimo"], escala_ajuste=prevision["escala_ajuste"],
+    )
+    extremos, detalle_intervalos, cobertura = evaluar_intervalos(
+        hist.bus, modelo, horizonte_maximo, (minimo, maximo),
+        prevision["entrenamiento_minimo"], prevision["escala_ajuste"],
     )
     years = range(fin + 1, fin + 1 + len(pred))
     panel = hist.reindex(range(config["inicio"], years.stop))
     panel["prevision"] = pd.Series(pred.round(ajuste["decimales"]), index=years)
+    for i, campo in enumerate(("prediccion_inferior_95", "prediccion_superior_95")):
+        panel[campo] = pd.Series(extremos[:, i], index=years)
     for col, key in [("limite", "limites"), ("meta", "metas")]:
         valores = pd.Series({int(y): v for y, v in ajuste[key].items()}, dtype=float)
         panel[col] = valores.reindex(panel.index)
@@ -49,16 +57,30 @@ def pagina(config, codigo, datos, centros, root, version_selector):
     ]
     destino = root / codigo
     destino.mkdir(parents=True, exist_ok=True)
-    csv(panel, destino, "serie.csv", index=True)
     csv(miembros, destino, "grupo.csv")
     csv(metricas, destino, "validacion.csv")
     csv(errores, destino, "errores-validacion.csv")
     csv(ranking.rename_axis("modelo"), destino, "seleccion.csv", index=True)
+    csv(detalle_intervalos, destino, "validacion-intervalos.csv")
+    csv(cobertura, destino, "cobertura-intervalos.csv", index=True)
+    nota_intervalo = METODOS[modelo] if np.isfinite(extremos).any() else ""
+    for horizonte in config["horizontes"]:
+        sufijo = "" if horizonte == config["horizonte"] else f"-{horizonte}"
+        vista = panel.loc[:fin + horizonte]
+        csv(vista, destino, f"serie{sufijo}.csv", index=True)
+        dibujar_pagina(config, codigo, ajuste, vista, modelo, destino, horizonte, sufijo,
+                       nota_intervalo, version_selector)
+
+
+def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, sufijo,
+                  nota_intervalo, version_selector):
+    fin = config["fin"]
     fig = grafico(panel, fin, ajuste["titulo"], ajuste.get("subtitulo", config["subtitulo"]),
                   ajuste["unidad"], modelo, ajuste["ilustrativos"], decimales=ajuste["decimales"],
-                  maximo=maximo, notas_indicador=ajuste["notas"], polaridad=ajuste["polaridad"],
-                  unidad_porcentual=ajuste.get("formato") == "porcentaje")
-    exportar(fig, destino)
+                  maximo=ajuste["limites_naturales"][1], notas_indicador=ajuste["notas"],
+                  polaridad=ajuste["polaridad"], unidad_porcentual=ajuste.get("formato") == "porcentaje",
+                  nota_intervalo=nota_intervalo)
+    exportar(fig, destino, sufijo)
     plantilla = Path(__file__).with_name("pagina.html").read_text(encoding="utf-8")
     controles = []
     for titulo, opciones in CONTROLES.items():
@@ -73,7 +95,7 @@ def pagina(config, codigo, datos, centros, root, version_selector):
             f'<fieldset><legend>{titulo}</legend><div class="series">'
             f'<span>Serie</span><span>Cifras</span>{"".join(casillas)}</div></fieldset>'
         )
-    svg = (destino / "grafica.svg").read_text(encoding="utf-8")
+    svg = (destino / f"grafica{sufijo}.svg").read_text(encoding="utf-8")
     svg = svg[svg.index("<svg "):]
     escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / (len(panel) + .04)
     geometria = {
@@ -86,11 +108,19 @@ def pagina(config, codigo, datos, centros, root, version_selector):
     for otro_id, otro in config["indicadores"].items():
         seleccionado = " selected" if otro_id == codigo else ""
         opciones.append(f'<option value="../{escape(otro_id)}/"{seleccionado}>{escape(otro["titulo"])}</option>')
+    horizontes = []
+    for opcion in config["horizontes"]:
+        archivo = "./" if opcion == config["horizonte"] else f"{opcion}.html"
+        seleccionado = " selected" if opcion == horizonte else ""
+        horizontes.append(f'<option value="{archivo}"{seleccionado}>{opcion} años · {fin + 1}–{fin + opcion}</option>')
     html = Template(plantilla).substitute(
         titulo=escape(ajuste["titulo"]), indicadores="".join(opciones), controles="".join(controles), grafica=svg,
         geometria=json.dumps(geometria), version_selector=version_selector,
+        horizontes="".join(horizontes), horizonte=horizonte, codigo=escape(codigo),
+        archivo_horizonte=f"{horizonte}.html" if sufijo else "",
+        intervalo_control="" if nota_intervalo else " disabled",
     )
-    (destino / "index.html").write_text(html, encoding="utf-8")
+    (destino / (f"{horizonte}.html" if sufijo else "index.html")).write_text(html, encoding="utf-8")
 
 
 def main():

@@ -9,10 +9,13 @@ from pathlib import Path
 from urllib.request import urlopen
 
 from matplotlib.colors import to_rgba
+import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 from PIL import Image
 
 from datos import ID, preparar
+from intervalos import intervalo
 from grafico import ALFA_BANDA, AZUL, BENCHMARK, BUS, CONTROLES, LIMITE, META, REFERENCIA, grafico, numero
 
 
@@ -95,7 +98,7 @@ class Indicadores(unittest.TestCase):
         self.assertTrue(self.serie.loc[:2025, "prevision"].isna().all())
         config = self.config["indicadores"]["NPRESTDOMIC"]
         for col, clave in [("meta", "metas"), ("limite", "limites")]:
-            self.assertEqual(self.serie[col].to_dict(), {int(y): v for y, v in config[clave].items()})
+            self.assertEqual(self.serie[col].to_dict(), {int(y): v for y, v in config[clave].items() if int(y) <= 2028})
         self.assertTrue(self.serie.naturaleza_plan.eq("Ilustrativo").all())
         self.assertEqual(list(futuro.prevision), [365118, 348660, 354793])
         errores = pd.read_csv(self.distribucion / "errores-validacion.csv", sep=";", decimal=",")
@@ -260,6 +263,52 @@ class Indicadores(unittest.TestCase):
         self.assertTrue(serie.loc[2025, "bus_lider"])
         self.assertTrue(miembros.set_index(ID).loc["03", "referencia"])
         self.assertTrue(miembros.set_index(ID).loc[["01", "02"], codigo].isna().all())
+
+    def test_horizontes_e_intervalos(self):
+        for codigo, ajuste in self.config["indicadores"].items():
+            with self.subTest(codigo=codigo):
+                carpeta = self.distribucion.parent / codigo
+                corto = pd.read_csv(carpeta / "serie.csv", index_col="Anio", sep=";", decimal=",")
+                largo = pd.read_csv(carpeta / "serie-5.csv", index_col="Anio", sep=";", decimal=",")
+                pd.testing.assert_frame_equal(corto, largo.loc[:2028])
+                futuro = largo.loc[2026:]
+                self.assertEqual(list(futuro.index), list(range(2026, 2031)))
+                li, ls = futuro.prediccion_inferior_95, futuro.prediccion_superior_95
+                self.assertTrue((li <= futuro.prevision).all() and (futuro.prevision <= ls).all())
+                minimo, maximo = ajuste["limites_naturales"]
+                self.assertTrue(li.ge(minimo).all())
+                if maximo is not None:
+                    self.assertTrue(ls.le(maximo).all())
+                self.assertTrue(largo.loc[:2025, ["prediccion_inferior_95", "prediccion_superior_95"]]
+                                .isna().all().all())
+                for col, clave in [("meta", "metas"), ("limite", "limites")]:
+                    self.assertEqual(largo[col].to_dict(), {int(y): v for y, v in ajuste[clave].items()})
+                detalle = pd.read_csv(carpeta / "validacion-intervalos.csv", sep=";", decimal=",")
+                resumen = pd.read_csv(carpeta / "cobertura-intervalos.csv", index_col="horizonte",
+                                     sep=";", decimal=",")
+                for h, casos in detalle.groupby("horizonte"):
+                    validos = casos.dropna(subset=["inferior", "superior"])
+                    self.assertEqual(len(validos), resumen.loc[h, "estimables"])
+                    self.assertEqual(len(casos), 6 - h)
+                    self.assertEqual(int(validos.observado.between(validos.inferior, validos.superior).sum()),
+                                     resumen.loc[h, "cubiertos"])
+                    self.assertTrue(all(real == largo.loc[origen + h, "bus"]
+                                        for origen, real in zip(casos.origen, casos.observado)))
+                self.assertIn('data-horizonte="3"', (carpeta / "index.html").read_text())
+                self.assertIn('data-horizonte="5"', (carpeta / "5.html").read_text())
+                svg = (carpeta / "grafica-5.svg").read_text()
+                self.assertIn('id="serie-prediction_interval-2030"', svg)
+                self.assertIn('id="serie-bus_forecast-punto"', svg)
+                self.assertIn("95 % nominal", svg)
+
+    def test_intervalo_lineal_para_nueva_observacion(self):
+        y = np.array([14., 12., 16., 17., 18., 21., 22.])
+        x = sm.add_constant(np.arange(len(y)))
+        futuro = sm.add_constant(np.arange(len(y), len(y) + 3))
+        esperado = sm.OLS(y, x).fit().get_prediction(futuro).summary_frame(alpha=.05)
+        calculado = intervalo("Regresión lineal", y, 3, (None, None))
+        np.testing.assert_allclose(calculado, esperado[["obs_ci_lower", "obs_ci_upper"]])
+        self.assertTrue(np.isnan(intervalo("Media móvil de 3 años", y[:5], 3, (0, None))).all())
 
     def test_archivos_estaticos(self):
         html = (self.distribucion / "index.html").read_text(encoding="utf-8")

@@ -31,8 +31,9 @@ MODELOS = {
 }
 
 
-def evaluar(serie, horizonte, limites=(0, None), entrenamiento_minimo=5, escala_ajuste=1000):
+def evaluar(serie, horizonte, limites=(0, None), entrenamiento_minimo=5, escala_ajuste=1000, horizonte_seleccion=None):
     """Orígenes expansivos, con 5 datos iniciales y mismos cortes para cada método."""
+    seleccion = horizonte if horizonte_seleccion is None else horizonte_seleccion
     cortes = range(entrenamiento_minimo, len(serie))
     y = serie.to_numpy(dtype=float)
     if len(cortes) < 3:
@@ -41,13 +42,13 @@ def evaluar(serie, horizonte, limites=(0, None), entrenamiento_minimo=5, escala_
     scores = []
     for nombre, modelo in MODELOS.items():
         for corte in cortes:
-            h = min(horizonte, len(y) - corte)
+            h = min(seleccion, len(y) - corte)
             pred = np.asarray(modelo(y[:corte] / escala_ajuste, h)) * escala_ajuste
             if not np.isfinite(pred).all():
                 raise ValueError(f"Predicción no finita: {nombre}")
             for k, valor in enumerate(np.clip(pred, *limites), 1):
                 errores.append((nombre, serie.index[corte - 1], k, y[corte + k - 1], valor))
-        for h in range(1, horizonte + 1):
+        for h in range(1, seleccion + 1):
             pares = [(real, pred) for m, _, paso, real, pred in errores if m == nombre and paso == h]
             if pares:
                 real, pred = zip(*pares)

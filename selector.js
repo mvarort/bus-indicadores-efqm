@@ -52,6 +52,7 @@ function actualizar() {
         etiquetas[id].forEach(nodo => ocultar(nodo, !visible[id] || !casilla.checked));
     });
 
+    let ajusteIntervalo = 0;
     for (const grupo of geometria.grupos) {
         const elegidas = grupo.filter(({id}) => visible[id]);
         const ancho = elegidas.reduce((suma, barra) => suma + barra.ancho, 0)
@@ -61,9 +62,12 @@ function actualizar() {
             const centro = izquierda + barra.ancho / 2;
             const ajuste = (centro - barra.origen) * geometria.escala;
             [...series[barra.id], ...etiquetas[barra.id]].forEach(nodo => mover(nodo, ajuste));
+            if (barra.id === "bus_forecast") ajusteIntervalo = ajuste;
             izquierda += barra.ancho + geometria.separacion;
         }
     }
+
+    series.prediction_interval.forEach(nodo => mover(nodo, ajusteIntervalo));
 
     let hueco = 0;
     leyenda.forEach((elemento, i) => {
@@ -90,7 +94,8 @@ function actualizar() {
         "nota-banda": visible.comparison_band,
         "nota-liderazgo": visible.reference,
         "nota-plan": Object.values(combinaciones).flat().some(id => visible[id]),
-        "nota-prevision": visible.bus_forecast,
+        "nota-prevision": visible.bus_forecast || visible.prediction_interval,
+        "nota-intervalo": visible.prediction_interval,
     };
     let siguiente = 0;
     for (const {nodo, y} of notas) {
@@ -121,7 +126,8 @@ async function descargar() {
         if (!png) throw new Error("PNG vacío");
         const enlace = document.createElement("a");
         enlace.href = URL.createObjectURL(png);
-        enlace.download = `${location.pathname.split("/").filter(Boolean).pop() || "indicador"}-EFQM.png`;
+        const {codigo, horizonte} = document.querySelector("main").dataset;
+        enlace.download = `${codigo}-EFQM-${horizonte}a.png`;
         enlace.click();
         setTimeout(() => URL.revokeObjectURL(enlace.href), 1000);
         estado.textContent = "";
@@ -134,14 +140,21 @@ async function descargar() {
 
 const controles = [...casillas, ...cifras];
 const vista = new URLSearchParams(location.search).get("vista");
-if (vista && vista.length === controles.length && /^[01]+$/.test(vista)) {
-    controles.forEach((control, i) => { control.checked = vista[i] === "1"; });
+if (vista && /^[01]+$/.test(vista)) {
+    const restaurada = vista.length === controles.length - 1 ? vista.slice(0, 9) + "1" + vista.slice(9) : vista;
+    if (restaurada.length === controles.length) {
+        controles.forEach((control, i) => { control.checked = restaurada[i] === "1"; });
+    }
 }
-document.querySelector("#indicador").addEventListener("change", ({target}) => {
-    const destino = new URL(target.value, location.href);
+function cambiarVista(ruta) {
+    const destino = new URL(ruta, location.href);
     destino.searchParams.set("vista", controles.map(control => Number(control.checked)).join(""));
     location.assign(destino);
+}
+document.querySelector("#indicador").addEventListener("change", ({target}) => {
+    cambiarVista(target.value + document.querySelector("main").dataset.archivoHorizonte);
 });
+document.querySelector("#horizonte").addEventListener("change", ({target}) => cambiarVista(target.value));
 
 panel.addEventListener("change", actualizar);
 document.querySelector("#restablecer").addEventListener("click", () => {

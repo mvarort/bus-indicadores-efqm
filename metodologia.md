@@ -69,10 +69,10 @@ El modelo seleccionado estima 365.118, 348.660 y 354.793 préstamos para
 2026, 2027 y 2028 respectivamente. Selección y evaluación usan los mismos
 orígenes. El ranking es exploratorio y los errores comparten años
 objetivo. Entre tres y cinco errores por horizonte, junto con el cambio
-de nivel histórico, impiden calibrar con fiabilidad intervalos de
-predicción empíricos. Se publican estimaciones puntuales con esta
-limitación. Mediana y referencia del grupo se muestran solo en el histórico.
-Las metas y límites de 2016–2028 están en la configuración y son
+de nivel histórico, impiden calibrar la cobertura con fiabilidad.
+Los intervalos del apartado de prospectiva son nominales y dependen
+de sus supuestos estadísticos. Mediana y referencia del grupo se muestran solo en el histórico.
+Las metas y límites de 2016–2030 están en la configuración y son
 ilustrativos. En la lámina, la línea azul media sigue la mediana y la
 azul oscura, el mejor resultado. La banda semitransparente ocupa el espacio
 entre ambas líneas y termina en el último año observado. Para indicadores de
@@ -151,10 +151,74 @@ pueden auditar por origen y horizonte en los CSV de cada indicador.
 Localizadores: `seleccion.csv` y `serie.csv` en cada carpeta de indicador.
 La muestra de validación sigue siendo breve. Las previsiones sirven
 para probar la representación y conservan la advertencia de
-incertidumbre sin intervalo calibrado.
+incertidumbre. La calibración de la cobertura queda pendiente.
 
 En las monografías electrónicas de pago, la BUS fija la referencia
 anual en 2020–2025. En 2025 la referencia coincide con su resultado,
 1.024.655. El mayor valor de los comparadores externos es 946.714.
 Localizadores: `NMONPAGOLIC/serie.csv`, campos `bus`, `referencia` y
 `bus_lider`, y `NMONPAGOLIC/grupo.csv`, valores del indicador en 2025.
+
+## Prospectiva a tres y cinco años e incertidumbre
+
+La selección del método usa el mismo ranking temporal de uno a tres
+años descrito arriba. Se ajusta el modelo elegido una sola vez para los
+cinco años y la vista de tres años muestra el prefijo 2026–2028.
+Las metas y límites de 2029–2030 son ilustrativos.
+
+Los intervalos son **marginales por año**, de nivel nominal del 95 %.
+Representan un nuevo resultado anual bajo el modelo y utilizan
+cuantiles de t de Student. Se calculan sobre las previsiones sin
+redondear y se acotan a los límites naturales del indicador.
+Los remates grises representan los extremos predictivos. Las barras
+moradas representan los límites ilustrativos de gestión.
+
+- **Monografías · regresión lineal.** Intervalo para una nueva
+  observación con error residual y extrapolación de los coeficientes:
+  error estándar residual multiplicado por la raíz de
+  `1 + 1/n + (x_f − media(x))² / Sxx`, con `n − 2` grados de libertad.
+  Supone errores independientes, normales y de varianza constante.
+- **Préstamos y personas por puesto · media móvil de tres años.**
+  Se explicita un modelo condicional con coeficientes fijos de 1/3
+  y una innovación aditiva independiente en cada año. La varianza se
+  estima con los errores de predicción a un paso de los años con tres
+  antecedentes. Se propagan las innovaciones por la misma recursión
+  de la previsión puntual. Con diez datos hay siete innovaciones.
+- **Gasto electrónico · suavizado exponencial simple.** Se usa el
+  modelo de nivel con innovaciones aditivas. La varianza a horizonte
+  `h` es la varianza residual multiplicada por
+  `1 + (h − 1) × alfa²`. Se usa `n − 2` como ajuste aproximado por
+  estimar nivel y alfa. El cálculo condiciona la propagación al alfa
+  ajustado y deja fuera su incertidumbre de estimación.
+
+Los supuestos pueden fallar ante cambios de nivel, como el observado en
+préstamos, o ante dependencia temporal. El procedimiento no incorpora
+la incertidumbre de seleccionar el modelo ni promete cobertura simultánea.
+Si faltan tres grados de libertad, la varianza residual no es positiva
+o el modelo elegido carece de un método implementado, se deja el
+intervalo sin estimar.
+
+Se evaluó el modelo elegido con orígenes expansivos y sin usar los
+datos posteriores a cada origen para ajustar el intervalo. Los mismos
+años informaron la elección previa del modelo. Esta cobertura es
+exploratoria, con observaciones objetivo solapadas y como máximo
+un caso a cinco años.
+
+| Indicador | 1 año | 2 años | 3 años | 4 años | 5 años |
+|---|---:|---:|---:|---:|---:|
+| Préstamos | 4/4 | 3/3 | 2/2 | 1/1 | — |
+| Monografías | 4/5 | 4/4 | 3/3 | 2/2 | 1/1 |
+| Personas por puesto | 4/4 | 3/3 | 2/2 | 1/1 | — |
+| Gasto electrónico | 5/5 | 4/4 | 3/3 | 2/2 | 1/1 |
+
+Celdas: resultados observados cubiertos / intervalos estimables. El
+guion indica que ningún intervalo retrospectivo fue estimable en ese
+horizonte. El ajuste final, con diez años, sí produce intervalos
+nominales para los cuatro indicadores hasta 2030. Los CSV
+`validacion-intervalos.csv` y `cobertura-intervalos.csv` incluyen
+el detalle por origen y el resumen por plazo. `serie.csv` y
+`serie-5.csv` incluyen `prediccion_inferior_95` y
+`prediccion_superior_95`, diferenciados de la columna `limite`.
+
+Para el modelo de nivel, la expresión de la varianza sigue el modelo
+ETS(A,N,N) de [Hyndman y Athanasopoulos, §8.7](https://otexts.robjhyndman.com/fpp3/ets-forecasting.html).

@@ -3,6 +3,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.path import Path
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 from matplotlib.transforms import blended_transform_factory
 import pandas as pd
@@ -15,6 +16,9 @@ BENCHMARK = "#4682B4"
 REFERENCIA = "#163D70"
 ALFA_BANDA = .53
 TRAZO_BENCHMARK = (0, (4, 2.5))
+GRIS_INTERVALO = "#3D4751"
+SIMBOLO_INTERVALO = Path([(-.32, -.5), (.32, -.5), (0, -.5), (0, .5), (-.32, .5), (.32, .5)],
+                         [Path.MOVETO, Path.LINETO, Path.MOVETO, Path.LINETO, Path.MOVETO, Path.LINETO])
 ROSADO = "#F8D6DC"
 TINTA = "#172637"
 SECUNDARIO = "#45566A"
@@ -61,7 +65,7 @@ def rotular_barras(ax, valores, serie, futuro, desplazamiento, color, formato):
         tinta, caja = "white", None
     for year, value in valores.items():
         etiqueta = ax.annotate(
-            formato(value), (year + desplazamiento, value), xytext=(0, -7),
+            formato(value), (year + desplazamiento, value), xytext=(6 if serie == "bus_forecast" else 0, -7),
             textcoords="offset points", ha="center", va="top", rotation=90,
             fontsize=9.5 if bus else 7.5, fontweight="bold", color=tinta, bbox=caja, zorder=7,
             visible=bus,
@@ -92,7 +96,7 @@ def rotular_comparacion(fig, ax, hist, formato):
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
-            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False):
+            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False, nota_intervalo=None):
     sufijo = " %" if unidad_porcentual else ""
     def formato(valor):
         return numero(valor, decimales, sufijo)
@@ -147,7 +151,24 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
 
     rotular_comparacion(fig, ax, hist, formato_comparacion)
 
-    superior = panel[["bus", "benchmark", "referencia", "prevision", "limite", "meta"]].max().max()
+    columnas_escala = ["bus", "benchmark", "referencia", "prevision", "limite", "meta"]
+    if nota_intervalo:
+        intervalos = fut[["prediccion_inferior_95", "prediccion_superior_95"]].dropna()
+        for year, lo, hi in intervalos.itertuples():
+            linea, = ax.plot(
+                [year-.075, year+.075, float("nan"), year, year, float("nan"), year-.075, year+.075],
+                [lo, lo, float("nan"), lo, hi, float("nan"), hi, hi],
+                color=GRIS_INTERVALO, linewidth=.8, zorder=6,
+            )
+            linea.set_gid(f"serie-prediction_interval-{year}")
+        columnas_escala.append("prediccion_superior_95")
+    if nota_intervalo is not None:
+        puntos, = ax.plot(fut.index, fut.prevision, linestyle="none", marker="o",
+                          markersize=4, markerfacecolor="white", markeredgecolor=GRIS_INTERVALO,
+                          markeredgewidth=.85, zorder=6.5)
+        puntos.set_gid("serie-bus_forecast-punto")
+
+    superior = panel[columnas_escala].max().max()
     ax.set_ylim(0, maximo if maximo is not None else max(superior * 1.13, 1e-9))
     ax.set_xlim(panel.index[0] - .52, panel.index[-1] + .52)
     ax.set_xticks(panel.index, [str(y) for y in panel.index], fontsize=9, fontweight="medium")
@@ -178,6 +199,11 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
         ("reference", referencias["reference"]),
         ("comparison_band", Patch(facecolor=AZUL, alpha=ALFA_BANDA, label="Banda comparativa")),
     ]
+    if nota_intervalo:
+        elementos.append(("prediction_interval", Line2D(
+            [], [], color=GRIS_INTERVALO, linestyle="none", marker=SIMBOLO_INTERVALO,
+            markersize=10, markeredgewidth=.8, label="Intervalo de predicción (95 %)",
+        )))
     leyenda = fig.legend(handles=[handle for _, handle in elementos],
                          loc="upper left", bbox_to_anchor=(.047, .842),
                          borderaxespad=0, ncols=len(elementos), frameon=False, fontsize=9.5,
@@ -195,26 +221,30 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
          "Banda comparativa: intervalo comprendido entre ambas referencias."),
         ("banda", "La banda no es un intervalo de confianza estadístico ni una zona de excelencia."),
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
-        ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones sujetas a incertidumbre, sin intervalo calibrado."),
+        ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones puntuales sujetas a incertidumbre."),
     ]
+    if nota_intervalo:
+        notas.append(("intervalo", "Intervalo de predicción del 95 % nominal (remates grises). Cobertura sin calibrar con esta muestra."))
+    elif nota_intervalo is not None:
+        notas.append(("sin-intervalo", "Sin intervalo de predicción defendible para el modelo y los datos disponibles."))
     if not lideres.empty:
         notas.append(("liderazgo", "Círculo rojo: la BUS alcanza el mejor resultado anual, incluidos los empates."))
     notas.extend((f"indicador-{i}", nota) for i, nota in enumerate(notas_indicador))
-    separacion_notas = .020 if len(notas) > 5 else .023
+    separacion_notas = min(.023, .112 / max(1, len(notas) - 1))
     for i, (clave, nota) in enumerate(notas):
         artista = fig.text(.048, .132 - i * separacion_notas, nota, fontsize=9, color=SECUNDARIO, va="top")
         artista.set_gid(f"nota-{clave}")
     return fig
 
 
-def exportar(fig, destino):
+def exportar(fig, destino, sufijo=""):
     """Exporta la misma composición al PNG principal y al SVG vectorial."""
-    fig.savefig(destino / "grafica.png", dpi=EXPORT_DPI)
+    fig.savefig(destino / f"grafica{sufijo}.png", dpi=EXPORT_DPI)
     opcionales = [artista for artista in [*fig.texts, *fig.axes[0].texts]
                   if (artista.get_gid() or "").startswith("etiqueta-") and not artista.get_visible()]
     for artista in opcionales:
         artista.set_visible(True)
-    ruta_svg = destino / "grafica.svg"
+    ruta_svg = destino / f"grafica{sufijo}.svg"
     fig.savefig(ruta_svg, format="svg", metadata={"Title": fig.get_label(), "Date": None})
     svg = ruta_svg.read_text(encoding="utf-8")
     for artista in opcionales:
