@@ -11,6 +11,10 @@ header { border-bottom: 1px solid #dfe5ec; }
 h1 { max-width: 1600px; margin: auto; padding: 16px clamp(20px, 4.7vw, 75px);
      font-size: clamp(1rem, 2vw, 1.25rem); font-weight: 650; }
 main { max-width: 1600px; margin: auto; }
+.indicador { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center;
+             margin: 16px clamp(20px, 4.7vw, 75px) 0; font-size: .9rem; font-weight: 650; }
+select { max-width: 100%; min-width: 0; padding: 7px; border: 1px solid #b1c0d1;
+         border-radius: 5px; background: white; color: #172637; font: inherit; }
 #opciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px;
             margin: 16px clamp(20px, 4.7vw, 75px) 0; padding: 12px 16px;
             background: #f5f8fb; border: 1px solid #dfe5ec; border-radius: 8px; font-size: .85rem; }
@@ -33,6 +37,8 @@ button { padding: 7px 10px; border: 1px solid #b1c0d1; background: white; border
 <body>
 <header><h1>Indicadores EFQM 2028</h1></header>
 <main>
+<div class="indicador"><label for="indicador">Indicador</label>
+<select id="indicador">$indicadores</select></div>
 <section id="opciones" aria-label="Elementos gráficos">
 $controles
 <div><button id="descargar" type="button">Descargar imagen PNG</button>

@@ -93,7 +93,7 @@ function actualizar() {
     };
     let siguiente = 0;
     for (const {nodo, y} of notas) {
-        const activa = mostrarNotas[nodo.id];
+        const activa = mostrarNotas[nodo.id] ?? true;
         ocultar(nodo, !activa);
         if (activa) {
             mover(nodo, 0, notas[siguiente].y - y);
@@ -130,6 +130,17 @@ async function descargar() {
         URL.revokeObjectURL(url);
     }
 }
+
+const controles = [...casillas, ...cifras];
+const vista = new URLSearchParams(location.search).get("vista");
+if (vista && vista.length === controles.length && /^[01]+$/.test(vista)) {
+    controles.forEach((control, i) => { control.checked = vista[i] === "1"; });
+}
+document.querySelector("#indicador").addEventListener("change", ({target}) => {
+    const destino = new URL(target.value, location.href);
+    destino.searchParams.set("vista", controles.map(control => Number(control.checked)).join(""));
+    location.assign(destino);
+});
 
 panel.addEventListener("change", actualizar);
 document.querySelector("#restablecer").addEventListener("click", () => {

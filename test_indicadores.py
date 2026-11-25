@@ -39,7 +39,8 @@ class Indicadores(unittest.TestCase):
                             if r["Modalidad"] == "Presencial"}
         cls.original = {(int(r["Anio"]), r["Codigo_Biblioteca_REBIUN"], r["Codigo_Tecnico"]): float(r["Valor"])
                         for r in filas("rebiun_real.csv")
-                        if r["Codigo_Tecnico"] in {"NPRESTDOMIC", "NUSUARIOPROP"} and r["Valor"]}
+                        if r["Codigo_Tecnico"] in {"NPRESTDOMIC", "NUSUARIOPROP", "NMONPAGOLIC", "NPUESTOSLECT",
+                                                  "GASTOINFOELECT", "GASTORECINFO"} and r["Valor"]}
 
     def test_contraste_de_todos_los_anios(self):
         for year in range(2016, 2026):
@@ -164,6 +165,70 @@ class Indicadores(unittest.TestCase):
             barra = rect.get_window_extent(renderer)
             self.assertTrue(barra.contains(caja.x0, caja.y0))
             self.assertTrue(barra.contains(caja.x1, caja.y1))
+
+    def test_indicadores_ampliados(self):
+        pruebas = [
+            ("NMONPAGOLIC", "NMONPAGOLIC", None, 1, max, "Regresión lineal"),
+            ("USUARIOS_POR_PUESTO", "NUSUARIOPROP", "NPUESTOSLECT", 1, min, "Media móvil de 3 años"),
+            ("PCT_GASTO_ELECTRONICO", "GASTOINFOELECT", "GASTORECINFO", 100, max,
+             "Suavizado exponencial simple"),
+        ]
+        for codigo, numerador, denominador, factor, mejor, modelo in pruebas:
+            with self.subTest(codigo=codigo):
+                carpeta = self.distribucion.parent / codigo
+                serie = pd.read_csv(carpeta / "serie.csv", index_col="Anio", sep=";", decimal=",")
+                ranking = pd.read_csv(carpeta / "seleccion.csv", sep=";", decimal=",")
+                self.assertEqual(ranking.modelo.iloc[0], modelo)
+                self.assertTrue(serie.loc[2026:, "prevision"].notna().all())
+                self.assertTrue(serie.loc[2026:, ["benchmark", "referencia"]].isna().all().all())
+
+                def dato(year, centro):
+                    valor = self.original.get((year, centro, numerador))
+                    if denominador:
+                        divisor = self.original.get((year, centro, denominador), 0)
+                        return factor * (valor / divisor) if valor is not None and divisor > 0 else None
+                    return valor
+
+                for year, fila in serie.loc[:2025].iterrows():
+                    casos = [dato(year, centro) for centro in self.presenciales - {"67"}
+                             if self.original.get((year, centro, "NUSUARIOPROP"), 0) > 40000]
+                    casos = [v for v in casos if v is not None and (factor != 100 or 0 <= v <= 100)]
+                    self.assertAlmostEqual(fila.bus, dato(year, "67"))
+                    self.assertAlmostEqual(fila.referencia, mejor(casos))
+                    self.assertAlmostEqual(fila.benchmark, statistics.median(casos))
+                    self.assertEqual(fila.con_dato, len(casos))
+                if mejor is min:
+                    self.assertTrue(serie.meta.lt(serie.limite).all())
+                    self.assertTrue(serie.loc[:2025, "referencia"].le(serie.loc[:2025, "benchmark"]).all())
+                if factor == 100:
+                    for col in ["bus", "benchmark", "referencia", "prevision", "limite", "meta"]:
+                        self.assertTrue(serie[col].dropna().between(0, 100).all())
+                if codigo == "NMONPAGOLIC":
+                    self.assertEqual(serie.loc[:2025].query("bus > referencia").index.tolist(),
+                                     list(range(2020, 2026)))
+                with Image.open(carpeta / "grafica.png") as imagen:
+                    self.assertEqual(imagen.size, (3200, 1480))
+                html = (carpeta / "index.html").read_text()
+                self.assertIn(f'<option value="../{codigo}/" selected>', html)
+                self.assertEqual(html.count("<svg "), 1)
+
+    def test_formula_sin_denominador_valido(self):
+        config = deepcopy(self.config)
+        config["inicio"] = config["fin"] = 2025
+        codigo = "USUARIOS_POR_PUESTO"
+        datos = pd.DataFrame([
+            (2025, "67", "NUSUARIOPROP", 50000), (2025, "67", "NPUESTOSLECT", 5000),
+            (2025, "01", "NUSUARIOPROP", 45000), (2025, "01", "NPUESTOSLECT", 0),
+            (2025, "02", "NUSUARIOPROP", 46000),
+            (2025, "03", "NUSUARIOPROP", 48000), (2025, "03", "NPUESTOSLECT", 6000),
+        ], columns=["Anio", ID, "Codigo_Tecnico", "Valor"])
+        centros = pd.DataFrame([(centro, centro, "Presencial") for centro in ["67", "01", "02", "03"]],
+                               columns=[ID, "Biblioteca", "Modalidad"])
+        serie, miembros = preparar(datos, centros, config, codigo)
+        self.assertEqual(serie.loc[2025, "elegibles"], 3)
+        self.assertEqual(serie.loc[2025, "con_dato"], 1)
+        self.assertEqual(serie.loc[2025, "benchmark"], 8)
+        self.assertTrue(miembros.set_index(ID).loc[["01", "02"], codigo].isna().all())
 
     def test_archivos_estaticos(self):
         html = (self.distribucion / "index.html").read_text(encoding="utf-8")

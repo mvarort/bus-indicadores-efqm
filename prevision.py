@@ -31,9 +31,9 @@ MODELOS = {
 }
 
 
-def evaluar(serie, horizonte):
+def evaluar(serie, horizonte, limites=(0, None), entrenamiento_minimo=5, escala_ajuste=1000):
     """Orígenes expansivos, con 5 datos iniciales y mismos cortes para cada método."""
-    cortes = range(5, len(serie))
+    cortes = range(entrenamiento_minimo, len(serie))
     y = serie.to_numpy(dtype=float)
     if len(cortes) < 3:
         raise ValueError("Se requieren tres orígenes como mínimo para comparar modelos")
@@ -42,10 +42,10 @@ def evaluar(serie, horizonte):
     for nombre, modelo in MODELOS.items():
         for corte in cortes:
             h = min(horizonte, len(y) - corte)
-            pred = np.asarray(modelo(y[:corte] / 1000, h)) * 1000
+            pred = np.asarray(modelo(y[:corte] / escala_ajuste, h)) * escala_ajuste
             if not np.isfinite(pred).all():
                 raise ValueError(f"Predicción no finita: {nombre}")
-            for k, valor in enumerate(np.maximum(pred, 0), 1):
+            for k, valor in enumerate(np.clip(pred, *limites), 1):
                 errores.append((nombre, serie.index[corte - 1], k, y[corte + k - 1], valor))
         for h in range(1, horizonte + 1):
             pares = [(real, pred) for m, _, paso, real, pred in errores if m == nombre and paso == h]
@@ -56,6 +56,9 @@ def evaluar(serie, horizonte):
     validacion = pd.DataFrame(scores, columns=["modelo", "horizonte", "n", "mae", "rmse"])
     ranking = validacion.groupby("modelo")[["mae", "rmse"]].mean().sort_values(["mae", "rmse"])
     elegido = ranking.index[0]
-    futuro = np.maximum(0, np.asarray(MODELOS[elegido](y / 1000, horizonte)) * 1000)
+    futuro = np.asarray(MODELOS[elegido](y / escala_ajuste, horizonte)) * escala_ajuste
+    if not np.isfinite(futuro).all():
+        raise ValueError(f"Predicción final no finita: {elegido}")
+    futuro = np.clip(futuro, *limites)
     detalle = pd.DataFrame(errores, columns=["modelo", "origen", "horizonte", "observado", "previsto"])
     return elegido, futuro, validacion, detalle, ranking

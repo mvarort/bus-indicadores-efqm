@@ -22,7 +22,11 @@ def cargar(config, carpeta=None):
 def preparar(datos, centros, config, codigo):
     """Preserva los elegibles sin dato y calcula los extremos sobre casos válidos."""
     years = range(config["inicio"], config["fin"] + 1)
-    subset = datos.loc[datos.Anio.isin(years) & datos.Codigo_Tecnico.isin({codigo, "NUSUARIOPROP"})].copy()
+    indicador = config["indicadores"][codigo]
+    formula = indicador.get("formula")
+    variables = {formula["numerador"], formula["denominador"]} if formula else {indicador.get("variable", codigo)}
+    subset = datos.loc[datos.Anio.isin(years) &
+                      datos.Codigo_Tecnico.isin(variables | {"NUSUARIOPROP"})].copy()
     subset["Valor"] = pd.to_numeric(subset.Valor, errors="raise")
     conocidos = subset.Valor.dropna()
     if not np.isfinite(conocidos).all() or (conocidos < 0).any():
@@ -30,6 +34,17 @@ def preparar(datos, centros, config, codigo):
     if set(subset[ID]) - set(centros[ID]):
         raise ValueError("Hay códigos REBIUN sin entrada en el directorio")
     panel = subset.pivot(index=KEY, columns="Codigo_Tecnico", values="Valor").reset_index()
+    if formula:
+        numerador = panel[formula["numerador"]]
+        denominador = panel[formula["denominador"]]
+        panel[codigo] = numerador.div(denominador.where(denominador.gt(0))) * formula["factor"]
+    else:
+        panel[codigo] = panel[indicador.get("variable", codigo)]
+    minimo, maximo = indicador.get("limites_naturales", [0, None])
+    valido = np.isfinite(panel[codigo]) & panel[codigo].ge(minimo)
+    if maximo is not None:
+        valido &= panel[codigo].le(maximo)
+    panel[codigo] = panel[codigo].where(valido)
     panel = panel.merge(centros, on=ID, validate="many_to_one")
     bus = panel.loc[panel[ID].eq(config["biblioteca"])].set_index("Anio")[codigo].reindex(years)
     if bus.isna().any():
@@ -40,7 +55,7 @@ def preparar(datos, centros, config, codigo):
         panel[ID].ne(config["biblioteca"])
     ].copy().sort_values(["Anio", "Biblioteca"])
     grupo = miembros.groupby("Anio")[codigo]
-    polaridad = config["indicadores"][codigo]["mejor"]
+    polaridad = indicador["mejor"]
     if polaridad not in {"max", "min"}:
         raise ValueError(f"{codigo}: la polaridad debe ser max o min")
     mejor = grupo.max() if polaridad == "max" else grupo.min()

@@ -1,6 +1,6 @@
-# Metodología · NPRESTDOMIC
+# Metodología de los indicadores EFQM
 
-## Datos y comparación
+## Préstamos domiciliarios · NPRESTDOMIC
 
 Fuente REBIUN Data Explorer, revisión `25996fc11eb8212e11a114b58884b3741c6194bd`.
 En el CSV longitudinal, las claves son año, código de biblioteca y código técnico.
@@ -98,3 +98,58 @@ y el comparador son decisiones del prototipo.
 [EFQM](https://efqm.org/the-efqm-model/),
 [IBCS](https://www.ibcs.com/standards/),
 [ONS](https://service-manual.ons.gov.uk/data-visualisation).
+
+## Ampliación a cuatro indicadores
+
+La revisión de FU-010 indicada arriba contiene, para BUS 67 y
+2016–2025, diez valores anuales de cada variable necesaria. Localizador:
+`data/rebiun_real.csv`, claves `Anio`, `Codigo_Biblioteca_REBIUN` y
+`Codigo_Tecnico`. Las definiciones de esta tabla son las denominaciones
+del fichero longitudinal. Las razones son cálculos del prototipo.
+
+| Indicador | Cálculo | Referencia anual |
+|---|---|---|
+| Préstamos domiciliarios de material bibliográfico | `NPRESTDOMIC`, préstamos domiciliarios | Máximo |
+| Monografías electrónicas de pago | `NMONPAGOLIC`, recuento de monografías electrónicas de pago | Máximo |
+| Personas usuarias por puesto de lectura | `NUSUARIOPROP` (personas usuarias propias) / `NPUESTOSLECT` (puestos de lectura) | Mínimo |
+| Porcentaje del gasto en información electrónica | 100 × `GASTOINFOELECT` (gasto en información electrónica) / `GASTORECINFO` (gasto en recursos de información) | Máximo descriptivo provisional |
+
+La polaridad estratégica del porcentaje queda pendiente. Sus metas y
+límites ilustrativos son referencias gráficas, sin valoración del
+desempeño. Para puestos de lectura, la meta es inferior al límite por
+tratarse de una razón de polaridad decreciente.
+
+Se calcula cada razón por biblioteca y año antes de obtener la mediana
+y el extremo del grupo. Si falta un componente, el denominador es cero
+o el resultado queda fuera del dominio natural, ese resultado se
+considera ausente. El centro elegible permanece en el fichero del grupo
+y queda fuera de las estadísticas del indicador del año. En esta
+revisión hay 96 registros comparadores elegibles con resultado válido
+para cada serie nueva, sumando los diez años. Localizador: `grupo.csv`
+y campos `elegibles` y `con_dato` de cada `serie.csv`.
+
+La misma validación temporal se aplica por separado a cada serie, con
+los cinco modelos y la prioridad MAE/RMSE descritos arriba. Se limita
+cada pronóstico de validación y final al dominio natural del indicador.
+Los porcentajes se acotan a 0–100. El ajuste utiliza la escala numérica
+declarada en la configuración. El CSV conserva las cifras históricas
+y los agregados con su precisión de cálculo. Las previsiones puntuales
+se redondean a la precisión de la lámina. Las métricas y errores se
+pueden auditar por origen y horizonte en los CSV de cada indicador.
+
+| Indicador | Método elegido | MAE medio | RMSE medio | 2026 | 2027 | 2028 |
+|---|---|---:|---:|---:|---:|---:|
+| Préstamos | Media móvil de 3 años | 44.090 | 57.046 | 365.118 | 348.660 | 354.793 |
+| Monografías de pago | Regresión lineal | 63.070 | 73.730 | 1.090.553 | 1.149.525 | 1.208.497 |
+| Personas usuarias por puesto | Media móvil de 3 años | 0,55 | 0,64 | 10,77 | 10,91 | 10,89 |
+| Gasto electrónico | Suavizado exponencial simple | 1,04 pp | 1,18 pp | 89,0 % | 89,0 % | 89,0 % |
+
+Localizadores: `seleccion.csv` y `serie.csv` en cada carpeta de indicador.
+La muestra de validación sigue siendo breve. Las previsiones sirven
+para probar la representación y conservan la advertencia de
+incertidumbre sin intervalo calibrado.
+
+En las monografías electrónicas de pago, la BUS supera el máximo del
+grupo en 2020–2025. En 2025, la BUS registra 1.024.655 y el máximo
+comparador es 946.714. Localizador: `NMONPAGOLIC/serie.csv`, campos
+`bus` y `referencia`, 2020–2025.

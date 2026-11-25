@@ -42,7 +42,184 @@
         "2027": 375000,
         "2028": 385000
       },
-      "subtitulo": "BUS frente a bibliotecas REBIUN presenciales con más de 40.000 personas usuarias propias."
+      "subtitulo": "BUS frente a bibliotecas REBIUN presenciales con más de 40.000 personas usuarias propias.",
+      "variable": "NPRESTDOMIC",
+      "decimales": 0,
+      "limites_naturales": [
+        0,
+        null
+      ],
+      "prevision": {
+        "metodo": "validacion_temporal",
+        "entrenamiento_minimo": 5,
+        "escala_ajuste": 1000
+      },
+      "polaridad": "creciente",
+      "notas": []
+    },
+    "NMONPAGOLIC": {
+      "variable": "NMONPAGOLIC",
+      "decimales": 0,
+      "limites_naturales": [
+        0,
+        null
+      ],
+      "prevision": {
+        "metodo": "validacion_temporal",
+        "entrenamiento_minimo": 5,
+        "escala_ajuste": 1000
+      },
+      "titulo": "Monografías electrónicas de pago",
+      "unidad": "Monografías",
+      "polaridad": "creciente",
+      "mejor": "max",
+      "ilustrativos": true,
+      "notas": [],
+      "limites": {
+        "2016": 450000,
+        "2017": 475000,
+        "2018": 500000,
+        "2019": 550000,
+        "2020": 600000,
+        "2021": 625000,
+        "2022": 650000,
+        "2023": 700000,
+        "2024": 750000,
+        "2025": 800000,
+        "2026": 825000,
+        "2027": 850000,
+        "2028": 875000
+      },
+      "metas": {
+        "2016": 550000,
+        "2017": 575000,
+        "2018": 600000,
+        "2019": 675000,
+        "2020": 750000,
+        "2021": 775000,
+        "2022": 825000,
+        "2023": 875000,
+        "2024": 950000,
+        "2025": 1000000,
+        "2026": 1050000,
+        "2027": 1100000,
+        "2028": 1150000
+      },
+      "subtitulo": "Recuento REBIUN · BUS frente a bibliotecas presenciales con más de 40.000 personas usuarias propias."
+    },
+    "USUARIOS_POR_PUESTO": {
+      "formula": {
+        "numerador": "NUSUARIOPROP",
+        "denominador": "NPUESTOSLECT",
+        "factor": 1
+      },
+      "decimales": 2,
+      "limites_naturales": [
+        0,
+        null
+      ],
+      "prevision": {
+        "metodo": "validacion_temporal",
+        "entrenamiento_minimo": 5,
+        "escala_ajuste": 1
+      },
+      "titulo": "Personas usuarias por puesto de lectura",
+      "unidad": "Personas por puesto",
+      "polaridad": "decreciente",
+      "mejor": "min",
+      "ilustrativos": true,
+      "notas": [
+        "Personas usuarias propias por puesto de lectura. Un valor menor indica mayor disponibilidad relativa de puestos."
+      ],
+      "limites": {
+        "2016": 12,
+        "2017": 12,
+        "2018": 12,
+        "2019": 12,
+        "2020": 12,
+        "2021": 12,
+        "2022": 12,
+        "2023": 12,
+        "2024": 12,
+        "2025": 12,
+        "2026": 11.8,
+        "2027": 11.6,
+        "2028": 11.4
+      },
+      "metas": {
+        "2016": 10,
+        "2017": 10,
+        "2018": 10,
+        "2019": 10,
+        "2020": 10,
+        "2021": 10,
+        "2022": 10,
+        "2023": 10,
+        "2024": 10,
+        "2025": 10,
+        "2026": 9.8,
+        "2027": 9.6,
+        "2028": 9.4
+      },
+      "subtitulo": "Personas usuarias propias ÷ puestos de lectura · BUS y grupo REBIUN presencial de más de 40.000 personas usuarias propias."
+    },
+    "PCT_GASTO_ELECTRONICO": {
+      "formula": {
+        "numerador": "GASTOINFOELECT",
+        "denominador": "GASTORECINFO",
+        "factor": 100
+      },
+      "decimales": 1,
+      "limites_naturales": [
+        0,
+        100
+      ],
+      "prevision": {
+        "metodo": "validacion_temporal",
+        "entrenamiento_minimo": 5,
+        "escala_ajuste": 100
+      },
+      "titulo": "Porcentaje del gasto en información electrónica",
+      "unidad": "Porcentaje del gasto",
+      "polaridad": "pendiente",
+      "mejor": "max",
+      "ilustrativos": true,
+      "notas": [
+        "Máximo descriptivo. Polaridad estratégica pendiente de definición. Las referencias ilustrativas no indican desempeño."
+      ],
+      "limites": {
+        "2016": 75,
+        "2017": 75,
+        "2018": 76,
+        "2019": 76,
+        "2020": 78,
+        "2021": 78,
+        "2022": 79,
+        "2023": 79,
+        "2024": 80,
+        "2025": 80,
+        "2026": 81,
+        "2027": 81,
+        "2028": 81
+      },
+      "metas": {
+        "2016": 82,
+        "2017": 82,
+        "2018": 83,
+        "2019": 83,
+        "2020": 84,
+        "2021": 84,
+        "2022": 85,
+        "2023": 85,
+        "2024": 86,
+        "2025": 86,
+        "2026": 87,
+        "2027": 87,
+        "2028": 87
+      },
+      "formato": "porcentaje",
+      "subtitulo": "Gasto electrónico sobre gasto en recursos de información · BUS y grupo REBIUN presencial de más de 40.000 personas usuarias propias."
     }
-  }
+  },
+  "subtitulo": "BUS frente a bibliotecas REBIUN presenciales con más de 40.000 personas usuarias propias."
 }

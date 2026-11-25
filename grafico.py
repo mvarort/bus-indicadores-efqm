@@ -43,13 +43,14 @@ SEPARACION = .03
 ETIQUETAS_INICIALES = {"bus_actual", "bus_forecast"}
 
 
-def numero(value):
-    entero, _, decimales = f"{value:,.2f}".partition(".")
-    fraccion = decimales.rstrip("0")
-    return entero.replace(",", ".") + (f",{fraccion}" if fraccion else "")
+def numero(value, decimales=None, sufijo=""):
+    entero, _, fraccion = f"{value:,.{2 if decimales is None else decimales}f}".partition(".")
+    if decimales is None:
+        fraccion = fraccion.rstrip("0")
+    return entero.replace(",", ".") + (f",{fraccion}" if fraccion else "") + sufijo
 
 
-def rotular_barras(ax, valores, serie, futuro, desplazamiento, color):
+def rotular_barras(ax, valores, serie, futuro, desplazamiento, color, formato):
     """Muestra las cifras de la BUS por defecto y prepara las de meta y límite."""
     bus = serie in ETIQUETAS_INICIALES
     fondo = ROSADO if serie == "bus_forecast" else "white"
@@ -60,7 +61,7 @@ def rotular_barras(ax, valores, serie, futuro, desplazamiento, color):
         tinta, caja = "white", None
     for year, value in valores.items():
         etiqueta = ax.annotate(
-            numero(value), (year + desplazamiento, value), xytext=(0, -7),
+            formato(value), (year + desplazamiento, value), xytext=(0, -7),
             textcoords="offset points", ha="center", va="top", rotation=90,
             fontsize=9.5 if bus else 7.5, fontweight="bold", color=tinta, bbox=caja, zorder=7,
             visible=bus,
@@ -68,14 +69,14 @@ def rotular_barras(ax, valores, serie, futuro, desplazamiento, color):
         etiqueta.set_gid(f"etiqueta-{serie}-{year}")
 
 
-def rotular_comparacion(fig, ax, hist):
+def rotular_comparacion(fig, ax, hist, formato):
     """Alinea los valores opcionales debajo de cada año sin tapar las series."""
     posicion = blended_transform_factory(ax.transData, fig.transFigure)
     filas = [
-        ("benchmark", "Benchmark", BENCHMARK, hist.benchmark.map(numero, na_action="ignore")),
-        ("reference", "Referencia", REFERENCIA, hist.referencia.map(numero, na_action="ignore")),
+        ("benchmark", "Benchmark", BENCHMARK, hist.benchmark.map(formato, na_action="ignore")),
+        ("reference", "Referencia", REFERENCIA, hist.referencia.map(formato, na_action="ignore")),
         ("comparison_band", "Banda", REFERENCIA, {
-            year: f"{numero(min(mediana, mejor))}–{numero(max(mediana, mejor))}"
+            year: f"{formato(min(mediana, mejor))}–{formato(max(mediana, mejor))}"
             for year, mediana, mejor in hist[["benchmark", "referencia"]].dropna().itertuples()
         }),
     ]
@@ -90,9 +91,17 @@ def rotular_comparacion(fig, ax, hist):
             artista.set_gid(f"etiqueta-{serie}-fila-{i}")
 
 
-def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
+def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
+            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False):
+    sufijo = " %" if unidad_porcentual else ""
+    def formato(valor):
+        return numero(valor, decimales, sufijo)
+
+    def formato_comparacion(valor):
+        return numero(valor, decimales or None, sufijo)
     """Dibuja zonas comparativas, barras y notas utilizando los valores del CSV."""
     fig = Figure(figsize=(16, 7.4), facecolor="white")
+    fig.set_label(titulo)
     FigureCanvasAgg(fig)
     ax = fig.add_axes([.072, .228, .908, .511])
     hist = panel.loc[:fin]
@@ -120,16 +129,16 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
             barras = ax.bar(valores.index + desplazamiento, valores, width=ancho, zorder=3, **estilo)
             for year, barra in zip(valores.index, barras):
                 barra.set_gid(f"serie-{serie}-barra-{year}")
-            rotular_barras(ax, valores, serie, futuro, desplazamiento, color)
+            rotular_barras(ax, valores, serie, futuro, desplazamiento, color, formato)
 
-    rotular_comparacion(fig, ax, hist)
+    rotular_comparacion(fig, ax, hist, formato_comparacion)
 
-    superior = panel[["bus", "referencia", "prevision", "limite", "meta"]].max().max()
-    ax.set_ylim(0, superior * 1.13)
+    superior = panel[["bus", "benchmark", "referencia", "prevision", "limite", "meta"]].max().max()
+    ax.set_ylim(0, maximo if maximo is not None else max(superior * 1.13, 1e-9))
     ax.set_xlim(panel.index[0] - .52, panel.index[-1] + .52)
     ax.set_xticks(panel.index, [str(y) for y in panel.index], fontsize=9, fontweight="medium")
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]))
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: numero(value)))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: numero(value, decimales if decimales and not unidad_porcentual else None, sufijo)))
     ax.tick_params(axis="both", length=0, pad=8, colors=SECUNDARIO, labelsize=9)
     ax.grid(axis="y", color="#DFE5EC", linewidth=.65, zorder=1)
     ax.spines[["top", "right", "left"]].set_visible(False)
@@ -164,16 +173,21 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos):
 
     fig.add_artist(Line2D([.047, .98], [.155, .155], transform=fig.transFigure,
                           color="#DFE5EC", linewidth=.7))
+    descripcion_referencia = "máximo descriptivo anual" if polaridad == "pendiente" else (
+        "menor resultado anual" if polaridad == "decreciente" else "mejor resultado anual"
+    )
     notas = [
         ("fuente", "Fuente  REBIUN Data Explorer."),
-        ("comparacion", "Benchmark: mediana del grupo comparador. Referencia del grupo: mejor resultado anual. "
+        ("comparacion", f"Benchmark: mediana del grupo comparador. Referencia del grupo: {descripcion_referencia}. "
          "Banda comparativa: intervalo comprendido entre ambas referencias."),
         ("banda", "La banda no es un intervalo de confianza estadístico ni una zona de excelencia."),
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
         ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones sujetas a incertidumbre, sin intervalo calibrado."),
     ]
+    notas.extend((f"indicador-{i}", nota) for i, nota in enumerate(notas_indicador))
+    separacion_notas = .020 if notas_indicador else .023
     for i, (clave, nota) in enumerate(notas):
-        artista = fig.text(.048, .132 - i * .023, nota, fontsize=9, color=SECUNDARIO, va="top")
+        artista = fig.text(.048, .132 - i * separacion_notas, nota, fontsize=9, color=SECUNDARIO, va="top")
         artista.set_gid(f"nota-{clave}")
     return fig
 
@@ -186,7 +200,7 @@ def exportar(fig, destino):
     for artista in opcionales:
         artista.set_visible(True)
     ruta_svg = destino / "grafica.svg"
-    fig.savefig(ruta_svg, format="svg", metadata={"Title": fig.texts[0].get_text(), "Date": None})
+    fig.savefig(ruta_svg, format="svg", metadata={"Title": fig.get_label(), "Date": None})
     svg = ruta_svg.read_text(encoding="utf-8")
     for artista in opcionales:
         grupo = f'<g id="{artista.get_gid()}"'

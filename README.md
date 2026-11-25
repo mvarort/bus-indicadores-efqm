@@ -8,6 +8,19 @@ Prototipo de una lámina por indicador, preparada para incorporarse como imagen 
 [Serie CSV](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/serie.csv) ·
 [Metodología y limitaciones](metodologia.md).
 
+## Indicadores
+
+- [Préstamos domiciliarios de material bibliográfico](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/).
+- [Monografías electrónicas de pago](https://mvarort.github.io/bus-indicadores-efqm/NMONPAGOLIC/).
+- [Personas usuarias por puesto de lectura](https://mvarort.github.io/bus-indicadores-efqm/USUARIOS_POR_PUESTO/).
+- [Porcentaje del gasto en información electrónica](https://mvarort.github.io/bus-indicadores-efqm/PCT_GASTO_ELECTRONICO/).
+
+Usa el desplegable para cambiar la lámina. La siguiente página recibe
+la selección de series y cifras, y «Descargar imagen PNG» recoge el
+indicador y los elementos visibles en ese momento. Cada carpeta pública
+incluye `grafica.png`, `grafica.svg`, `serie.csv` y los CSV de grupo y
+validación.
+
 ## Instalación y generación
 
 Con Python 3.11:
@@ -32,7 +45,7 @@ Abre http://localhost:8000. El generador obtiene los CSV públicos de la revisi�
 - `selector.js` actualiza la figura SVG incrustada y rasteriza esa misma versión a PNG de 3.200 × 1.480 px.
 - `indicadores.json` contiene periodo, revisión de origen, regla del grupo y metas y límites por indicador y año. Los valores incluidos para 2016–2028 son ilustrativos. Cuando existan valores oficiales, sustituye las dos series completas y actualiza `ilustrativos`.
 
-El generador reutiliza esta composición para indicadores anuales de escala no negativa. Añade el código técnico, el título, el subtítulo, la unidad, el sentido (`mejor: max` creciente o `mejor: min` decreciente) y las metas y límites por año. Revisa la idoneidad estadística y comparativa para cada indicador. El contraste automatizado de referencia está fijado a NPRESTDOMIC y la revisión publicada.
+El generador reutiliza esta composición para indicadores anuales de escala no negativa. Añade una clave de indicador con variable REBIUN o fórmula de razón, título, subtítulo, unidad, precisión, polaridad, límites naturales, configuración predictiva, notas y metas y límites por año. Usa `mejor: max` para polaridad creciente y `mejor: min` para decreciente. Si la polaridad está pendiente, documenta explícitamente una referencia descriptiva. Revisa la idoneidad estadística y comparativa para cada incorporación. Los contrastes automatizados cubren las cuatro series de la revisión publicada.
 
 Los originales se consultan desde una revisión fija. Al cambiarla, contrasta las definiciones y las campañas, regenera, valida la serie y actualiza la documentación y `datos_procesados/`. Los CSV usan punto y coma, coma decimal y UTF-8 con BOM. La [instantánea procesada](datos_procesados/) conserva la serie anual, los miembros del grupo, la validación por horizonte y los errores por origen.
 
