@@ -1,0 +1,19 @@
+{
+  "fuente": "https://github.com/mvarort/datos-rebiun",
+  "revision": "25996fc11eb8212e11a114b58884b3741c6194bd",
+  "biblioteca": "67",
+  "umbral_usuarios": 40000,
+  "inicio": 2016,
+  "fin": 2025,
+  "horizonte": 3,
+  "indicadores": {
+    "NPRESTDOMIC": {
+      "titulo": "Préstamos domiciliarios de material bibliográfico",
+      "unidad": "Préstamos",
+      "mejor": "max",
+      "ilustrativos": true,
+      "limites": {"2026": 310000, "2027": 315000, "2028": 320000},
+      "metas": {"2026": 365000, "2027": 375000, "2028": 385000}
+    }
+  }
+}

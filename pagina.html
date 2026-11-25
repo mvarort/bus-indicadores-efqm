@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$titulo · Indicadores BUS</title>
+<script src="../plotly.min.js"></script>
+<style>
+:root{color-scheme:light;--ink:#172637;--sub:#465970;--line:#dce4ed;--paper:#f1f4f8;--red:#a40f2a}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.55 system-ui,sans-serif}
+header{background:#142336;color:#fff;border-bottom:4px solid #c8102e}
+.wrap,main{max-width:1376px;margin:auto;padding:0 clamp(16px,4vw,50px)}
+header .wrap{padding-block:32px 40px}
+.kicker{font-size:.84rem;letter-spacing:.08em;font-weight:700;color:#dce9f7}
+h1,h2,h3,p{margin:0}h1{font-size:clamp(1.8rem,4vw,3.5rem);line-height:1.08;margin:12px 0;max-width:950px;letter-spacing:-.035em}
+h2{font-size:1.3rem;line-height:1.25}h3{font-size:1.05rem}header p{color:#dce9f7}
+main{padding-block:24px 42px}section,.stats article{background:#fff;border:1px solid var(--line);border-radius:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stats article{padding:16px 20px}.stats strong{display:block;font-size:clamp(1.4rem,3vw,2rem);font-variant-numeric:tabular-nums}
+small,.muted{color:var(--sub)}section{padding:clamp(14px,2vw,24px);margin-bottom:16px}section p{margin-block:8px}
+.toolbar,.series{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-block:12px}
+button,.toolbar a{background:#fff;border:1px solid #b2bfd0;border-radius:7px;padding:6px 12px;color:var(--ink);font:inherit;font-size:.9rem;text-decoration:none;cursor:pointer}
+button:hover,.toolbar a:hover{background:#edf3f9}
+a{color:#145b91;text-underline-offset:.18em}a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid #1674ad;outline-offset:3px}
+fieldset{border:0;padding:0;margin:0}.series label{font-size:.88rem;cursor:pointer}.series input{accent-color:#164d76}
+.scroll{overflow-x:auto}.chart{min-width:1060px}table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line)}th{background:#eef3f8}td{white-space:nowrap}details{border-top:1px solid var(--line);padding:9px 0}summary{font-weight:650;cursor:pointer}.note{font-size:.89rem}.mobile{display:none}
+@media(max-width:1130px){.mobile{display:block}}
+@media(max-width:640px){.stats{grid-template-columns:1fr}.stats article{padding:10px 15px;display:grid;grid-template-columns:1fr auto;align-items:center}.stats small{grid-column:1 / -1}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<p class="kicker">BIBLIOTECA UNIVERSITARIA DE SEVILLA · EFQM 2028</p>
+<h1>$titulo</h1>
+<p>Prototipo de indicadores · REBIUN $inicio–$fin · Prospectiva hasta $ultimo</p>
+</div></header>
+<main>
+<div class="stats" aria-label="Resumen de la serie">
+<article><h3>BUS · $fin</h3><strong>$valor</strong><small>Resultado observado</small></article>
+<article><h3>Grupo · $fin</h3><strong>$mediana</strong><small>Mediana anual</small></article>
+<article><h3>BUS · $primer_futuro</h3><strong>$futuro</strong><small>Previsión central</small></article>
+</div>
+<section aria-labelledby="evolucion">
+<h2 id="evolucion">Evolución y comparación anual</h2>
+<p class="muted">$aviso El grupo incluye bibliotecas presenciales con más de $umbral personas usuarias propias en cada ejercicio, excluida la BUS.</p>
+<div class="toolbar">
+<button id="imagen" type="button">Descargar imagen PNG</button>
+<a href="serie.csv" download>Descargar serie CSV</a>
+<a href="grupo.csv" download>Descargar grupo CSV</a>
+<a href="#valores">Consultar datos en tabla</a>
+</div>
+<p id="estado" class="note" role="status"></p>
+<fieldset><legend class="note">Series visibles</legend><div class="series">$controles</div></fieldset>
+<p class="mobile note muted">Desplaza la gráfica horizontalmente para recorrer todos los años.</p>
+<div class="scroll" tabindex="0" role="region" aria-label="Gráfica desplazable. Los datos están disponibles en la tabla anual."><div class="chart">$chart</div></div>
+<p class="note muted">La banda abarca desde la mediana hasta el mejor resultado del grupo con dato. Las cifras rayadas son previsiones de $modelo y están sujetas a incertidumbre.</p>
+</section>
+<section id="valores" aria-labelledby="valores-titulo"><h2 id="valores-titulo">Valores por año</h2>$anuales</section>
+<section aria-labelledby="grupo"><h2 id="grupo">Grupo comparador</h2>
+<p class="muted">Cada encabezado indica cuántas bibliotecas cumplen el filtro y cuáles obtienen el mejor resultado. Se mantienen los miembros con el indicador sin dato.</p>
+$grupos</section>
+<section aria-labelledby="metodo"><h2 id="metodo">Validación retrospectiva</h2>
+<p>Modelo seleccionado por el menor MAE medio entre horizontes: <strong>$modelo</strong>. La muestra aporta de tres a cinco errores por horizonte. La previsión se presenta como estimación puntual, sin intervalo calibrado.</p>
+<div class="toolbar"><a href="../metodologia.md">Leer metodología</a><a href="validacion.csv" download>Descargar métricas CSV</a><a href="errores-validacion.csv" download>Descargar errores CSV</a></div>
+<details><summary>Ver MAE y RMSE por modelo y horizonte</summary>$validacion</details>
+<p class="note muted">Fuente y localizador: <a href="$fuente">REBIUN Data Explorer, CSV originales</a> · Código $codigo · BUS 67.</p>
+</section>
+</main>
+<script>
+const plot = document.getElementById("grafico");
+const checks = [...document.querySelectorAll("[data-serie]")];
+checks.forEach(input => input.addEventListener("change", () => {
+  Plotly.restyle(plot, {visible: input.checked ? true : "legendonly"}, [Number(input.dataset.serie)]);
+}));
+plot.on("plotly_restyle", () => checks.forEach((input, i) => {
+  input.checked = ![false, "legendonly"].includes(plot.data[i].visible);
+}));
+document.getElementById("imagen").addEventListener("click", async () => {
+  const status = document.getElementById("estado");
+  try {
+    await Plotly.downloadImage(plot, {format:"png", filename:"BUS-$codigo", width:1300, height:520, scale:2});
+    status.textContent = "";
+  } catch (error) {
+    status.textContent = "No se pudo generar la imagen. Vuelve a intentarlo.";
+  }
+});
+</script>
+</body>
+</html>
