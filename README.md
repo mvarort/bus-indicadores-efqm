@@ -6,10 +6,10 @@ Prototipo estático de préstamos domiciliarios basado en REBIUN Data Explorer.
 
 ## Instalación
 
-Con Python 3.9:
+Con Python 3.11 (también probado localmente con Python 3.9):
 
 ```sh
-python3 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python generar.py
