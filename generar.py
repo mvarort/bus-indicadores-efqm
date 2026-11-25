@@ -1,6 +1,7 @@
 """Genera la aplicación estática y las tablas reproducibles de cada indicador."""
 import argparse
 import json
+from hashlib import sha256
 from html import escape
 from pathlib import Path
 from string import Template
@@ -17,7 +18,7 @@ def csv(df, salida, nombre, index=False):
     df.to_csv(salida / nombre, index=index, encoding="utf-8-sig", sep=";", decimal=",")
 
 
-def pagina(config, codigo, datos, centros, root):
+def pagina(config, codigo, datos, centros, root, version_selector):
     ajuste = config["indicadores"][codigo]
     fin = config["fin"]
     hist, miembros = preparar(datos, centros, config, codigo)
@@ -71,7 +72,7 @@ def pagina(config, codigo, datos, centros, root):
     }
     html = Template(plantilla).substitute(
         titulo=escape(ajuste["titulo"]), controles="".join(controles), grafica=svg,
-        geometria=json.dumps(geometria),
+        geometria=json.dumps(geometria), version_selector=version_selector,
     )
     (destino / "index.html").write_text(html, encoding="utf-8")
 
@@ -86,13 +87,14 @@ def main():
     datos, centros = cargar(config, args.datos)
     script = Path(__file__).with_name("selector.js").read_bytes()
     (args.salida / "selector.js").write_bytes(script)
+    version_selector = sha256(script).hexdigest()[:12]
     (args.salida / "metodologia.md").write_text(
         Path(__file__).with_name("metodologia.md").read_text(encoding="utf-8").replace("](datos_procesados/", "](NPRESTDOMIC/"),
         encoding="utf-8"
     )
     enlaces = []
     for codigo, ajuste in config["indicadores"].items():
-        pagina(config, codigo, datos, centros, args.salida)
+        pagina(config, codigo, datos, centros, args.salida, version_selector)
         enlaces.append(f'<li><a href="{escape(codigo)}/">{escape(ajuste["titulo"])}</a></li>')
     redirect = ""
     if len(enlaces) == 1:
