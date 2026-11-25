@@ -58,9 +58,12 @@ def preparar(datos, centros, config, codigo):
     polaridad = indicador["mejor"]
     if polaridad not in {"max", "min"}:
         raise ValueError(f"{codigo}: la polaridad debe ser max o min")
-    mejor = grupo.max() if polaridad == "max" else grupo.min()
+    extremo_externo = grupo.max() if polaridad == "max" else grupo.min()
+    candidatos = pd.concat([extremo_externo, bus], axis=1)
+    mejor = candidatos.max(axis=1) if polaridad == "max" else candidatos.min(axis=1)
+    bus_lider = bus.eq(mejor) & (indicador["polaridad"] != "pendiente")
     miembros["referencia"] = miembros[codigo].notna() & miembros[codigo].eq(miembros.Anio.map(mejor))
     return pd.DataFrame({
         "bus": bus, "benchmark": grupo.median(), "referencia": mejor,
-        "elegibles": grupo.size(), "con_dato": grupo.count(),
+        "elegibles": grupo.size(), "con_dato": grupo.count(), "bus_lider": bus_lider.astype("boolean"),
     }).reindex(years), miembros

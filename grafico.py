@@ -122,6 +122,14 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
         linea.set_gid(f"serie-{serie}-historico")
         referencias[serie] = linea
 
+    lideres = hist.loc[hist.bus_lider.eq(True).fillna(False)]
+    if not lideres.empty:
+        destacados, = ax.plot(
+            lideres.index, lideres.referencia, linestyle="none", marker="o", markersize=4,
+            markerfacecolor=BUS, markeredgecolor=REFERENCIA, markeredgewidth=.85, zorder=5,
+        )
+        destacados.set_gid("serie-reference-liderazgo")
+
     for periodo, futuro, grupo in [(hist, False, BARRAS[0]), (fut, True, BARRAS[1])]:
         for (serie, columna, ancho, color), desplazamiento in zip(grupo, (-.30, 0, .30)):
             estilo = {"color": color}
@@ -180,19 +188,19 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
 
     fig.add_artist(Line2D([.047, .98], [.155, .155], transform=fig.transFigure,
                           color="#DFE5EC", linewidth=.7))
-    descripcion_referencia = "máximo descriptivo anual" if polaridad == "pendiente" else (
-        "menor resultado anual" if polaridad == "decreciente" else "mejor resultado anual"
-    )
+    descripcion_referencia = "máximo descriptivo anual" if polaridad == "pendiente" else "mejor resultado anual"
     notas = [
         ("fuente", "Fuente  REBIUN Data Explorer."),
-        ("comparacion", f"Benchmark: mediana del grupo comparador. Referencia del grupo: {descripcion_referencia}. "
+        ("comparacion", f"Benchmark: mediana del grupo comparador, excluida la BUS. Referencia del grupo: {descripcion_referencia}, incluida la BUS. "
          "Banda comparativa: intervalo comprendido entre ambas referencias."),
         ("banda", "La banda no es un intervalo de confianza estadístico ni una zona de excelencia."),
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
         ("prevision", f"Previsión mediante {modelo.lower()}. Estimaciones sujetas a incertidumbre, sin intervalo calibrado."),
     ]
+    if not lideres.empty:
+        notas.append(("liderazgo", "Círculo rojo: la BUS alcanza el mejor resultado anual, incluidos los empates."))
     notas.extend((f"indicador-{i}", nota) for i, nota in enumerate(notas_indicador))
-    separacion_notas = .020 if notas_indicador else .023
+    separacion_notas = .020 if len(notas) > 5 else .023
     for i, (clave, nota) in enumerate(notas):
         artista = fig.text(.048, .132 - i * separacion_notas, nota, fontsize=9, color=SECUNDARIO, va="top")
         artista.set_gid(f"nota-{clave}")

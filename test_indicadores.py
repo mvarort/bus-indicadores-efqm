@@ -51,18 +51,20 @@ class Indicadores(unittest.TestCase):
                          if (year, centro, "NPRESTDOMIC") in self.original}
                 grupo = self.grupo[self.grupo.Anio.eq(year)]
                 self.assertEqual(set(grupo.Codigo_Biblioteca_REBIUN), ids)
-                self.assertEqual(set(grupo.loc[grupo.referencia, "Codigo_Biblioteca_REBIUN"]),
-                                 {centro for centro, val in datos.items() if val == max(datos.values())})
                 row = self.serie.loc[year]
+                mejor = max(row.bus, *datos.values())
+                self.assertEqual(set(grupo.loc[grupo.referencia, "Codigo_Biblioteca_REBIUN"]),
+                                 {centro for centro, val in datos.items() if val == mejor})
                 self.assertEqual(row.bus, self.original[(year, "67", "NPRESTDOMIC")])
                 self.assertEqual(row.elegibles, len(ids))
                 self.assertEqual(row.con_dato, len(datos))
                 self.assertEqual(row.benchmark, statistics.median(datos.values()))
-                self.assertEqual(row.referencia, max(datos.values()))
+                self.assertEqual(row.referencia, mejor)
+                self.assertEqual(row.bus_lider, row.bus == mejor)
 
     def test_polaridad_decreciente(self):
         config = deepcopy(self.config)
-        config["indicadores"]["NPRESTDOMIC"]["mejor"] = "min"
+        config["indicadores"]["NPRESTDOMIC"].update(mejor="min", polaridad="decreciente")
         datos = pd.DataFrame(
             [(year, centro, codigo, valor) for (year, centro, codigo), valor in self.original.items()
              if centro in self.presenciales],
@@ -73,13 +75,13 @@ class Indicadores(unittest.TestCase):
         calculado, miembros = preparar(datos, centros, config, "NPRESTDOMIC")
         for year, fila in calculado.iterrows():
             datos_anuales = miembros.loc[miembros.Anio.eq(year)]
-            self.assertEqual(fila.referencia, datos_anuales.NPRESTDOMIC.min())
+            self.assertEqual(fila.referencia, min(fila.bus, datos_anuales.NPRESTDOMIC.min()))
             self.assertLessEqual(fila.referencia, fila.benchmark)
             self.assertEqual(fila.benchmark, self.serie.loc[year, "benchmark"])
             self.assertTrue(datos_anuales.loc[datos_anuales.referencia, "NPRESTDOMIC"].eq(fila.referencia).all())
         ajuste = config["indicadores"]["NPRESTDOMIC"]
         panel = self.serie.copy()
-        panel["referencia"] = calculado.referencia
+        panel[["referencia", "bus_lider"]] = calculado[["referencia", "bus_lider"]]
         fig = grafico(panel, 2025, ajuste["titulo"], ajuste["subtitulo"], "Préstamos",
                       "Media móvil de 3 años", True)
         banda, = fig.axes[0].collections
@@ -202,7 +204,8 @@ class Indicadores(unittest.TestCase):
                              if self.original.get((year, centro, "NUSUARIOPROP"), 0) > 40000]
                     casos = [v for v in casos if v is not None and (factor != 100 or 0 <= v <= 100)]
                     self.assertAlmostEqual(fila.bus, dato(year, "67"))
-                    self.assertAlmostEqual(fila.referencia, mejor(casos))
+                    self.assertAlmostEqual(fila.referencia, mejor([fila.bus, *casos]))
+                    self.assertEqual(fila.bus_lider, factor != 100 and fila.bus == fila.referencia)
                     self.assertAlmostEqual(fila.benchmark, statistics.median(casos))
                     self.assertEqual(fila.con_dato, len(casos))
                 if mejor is min:
@@ -211,9 +214,26 @@ class Indicadores(unittest.TestCase):
                 if factor == 100:
                     for col in ["bus", "benchmark", "referencia", "prevision", "limite", "meta"]:
                         self.assertTrue(serie[col].dropna().between(0, 100).all())
+                historico = serie.loc[:2025]
                 if codigo == "NMONPAGOLIC":
-                    self.assertEqual(serie.loc[:2025].query("bus > referencia").index.tolist(),
-                                     list(range(2020, 2026)))
+                    lideres = historico.loc[historico.bus_lider.eq(True)]
+                    self.assertEqual(lideres.index.tolist(), list(range(2020, 2026)))
+                    self.assertEqual(list(lideres.bus), list(lideres.referencia))
+                    ajuste = self.config["indicadores"][codigo]
+                    fig = grafico(serie, 2025, ajuste["titulo"], ajuste["subtitulo"], ajuste["unidad"],
+                                  modelo, True)
+                    marcador = next(linea for linea in fig.axes[0].lines
+                                    if linea.get_gid() == "serie-reference-liderazgo")
+                    self.assertEqual(list(marcador.get_xdata()), list(lideres.index))
+                    self.assertEqual(list(marcador.get_ydata()), list(lideres.bus))
+                    self.assertEqual(marcador.get_markerfacecolor(), BUS)
+                    self.assertEqual(marcador.get_markeredgecolor(), REFERENCIA)
+                svg = (carpeta / "grafica.svg").read_text()
+                self.assertEqual('id="serie-reference-liderazgo"' in svg, codigo == "NMONPAGOLIC")
+                self.assertIn("excluida la BUS", svg)
+                self.assertIn("incluida la BUS", svg)
+                if factor == 100:
+                    self.assertIn("máximo descriptivo anual", svg)
                 with Image.open(carpeta / "grafica.png") as imagen:
                     self.assertEqual(imagen.size, (3200, 1480))
                 html = (carpeta / "index.html").read_text()
@@ -228,14 +248,17 @@ class Indicadores(unittest.TestCase):
             (2025, "67", "NUSUARIOPROP", 50000), (2025, "67", "NPUESTOSLECT", 5000),
             (2025, "01", "NUSUARIOPROP", 45000), (2025, "01", "NPUESTOSLECT", 0),
             (2025, "02", "NUSUARIOPROP", 46000),
-            (2025, "03", "NUSUARIOPROP", 48000), (2025, "03", "NPUESTOSLECT", 6000),
+            (2025, "03", "NUSUARIOPROP", 48000), (2025, "03", "NPUESTOSLECT", 4800),
         ], columns=["Anio", ID, "Codigo_Tecnico", "Valor"])
         centros = pd.DataFrame([(centro, centro, "Presencial") for centro in ["67", "01", "02", "03"]],
                                columns=[ID, "Biblioteca", "Modalidad"])
         serie, miembros = preparar(datos, centros, config, codigo)
         self.assertEqual(serie.loc[2025, "elegibles"], 3)
         self.assertEqual(serie.loc[2025, "con_dato"], 1)
-        self.assertEqual(serie.loc[2025, "benchmark"], 8)
+        self.assertEqual(serie.loc[2025, "benchmark"], 10)
+        self.assertEqual(serie.loc[2025, "referencia"], 10)
+        self.assertTrue(serie.loc[2025, "bus_lider"])
+        self.assertTrue(miembros.set_index(ID).loc["03", "referencia"])
         self.assertTrue(miembros.set_index(ID).loc[["01", "02"], codigo].isna().all())
 
     def test_archivos_estaticos(self):

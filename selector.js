@@ -88,6 +88,7 @@ function actualizar() {
         "nota-fuente": true,
         "nota-comparacion": visible.benchmark || visible.reference || visible.comparison_band,
         "nota-banda": visible.comparison_band,
+        "nota-liderazgo": visible.reference,
         "nota-plan": Object.values(combinaciones).flat().some(id => visible[id]),
         "nota-prevision": visible.bus_forecast,
     };

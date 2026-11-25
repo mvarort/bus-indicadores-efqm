@@ -37,7 +37,7 @@
 2020;19;130000,0;79289,0;Universidad Complutense de Madrid;Presencial;False
 2020;54;163453,0;44207,0;Universidad Politécnica de Madrid;Presencial;False
 2020;61;88529,0;49059,0;Universidad Rey Juan Carlos;Presencial;False
-2020;29;647767,0;62324,0;Universidad de Granada;Presencial;True
+2020;29;647767,0;62324,0;Universidad de Granada;Presencial;False
 2020;42;435024,0;43209,0;Universidad de Málaga;Presencial;False
 2020;07;77201,0;46317,0;Universitat Autònoma de Barcelona;Presencial;False
 2020;09;450057,0;86433,0;Universitat de Barcelona;Presencial;False
@@ -46,7 +46,7 @@
 2021;19;428795,0;74734,0;Universidad Complutense de Madrid;Presencial;False
 2021;54;155784,0;44149,0;Universidad Politécnica de Madrid;Presencial;False
 2021;61;172212,0;47929,0;Universidad Rey Juan Carlos;Presencial;False
-2021;29;698090,0;60891,0;Universidad de Granada;Presencial;True
+2021;29;698090,0;60891,0;Universidad de Granada;Presencial;False
 2021;42;478802,0;43393,0;Universidad de Málaga;Presencial;False
 2021;63;63033,0;42391,0;Universidad de Salamanca;Presencial;False
 2021;07;603288,0;40844,0;Universitat Autònoma de Barcelona;Presencial;False
@@ -56,7 +56,7 @@
 2022;19;756886,0;72991,0;Universidad Complutense de Madrid;Presencial;False
 2022;54;290056,0;45094,0;Universidad Politécnica de Madrid;Presencial;False
 2022;61;235578,0;47872,0;Universidad Rey Juan Carlos;Presencial;False
-2022;29;758620,0;65076,0;Universidad de Granada;Presencial;True
+2022;29;758620,0;65076,0;Universidad de Granada;Presencial;False
 2022;42;491224,0;44941,0;Universidad de Málaga;Presencial;False
 2022;07;119627,0;41346,0;Universitat Autònoma de Barcelona;Presencial;False
 2022;53;110494,0;41218,0;Universitat Politècnica de Catalunya;Presencial;False
@@ -66,7 +66,7 @@
 2023;19;685777,0;72645,0;Universidad Complutense de Madrid;Presencial;False
 2023;54;301555,0;45893,0;Universidad Politécnica de Madrid;Presencial;False
 2023;61;243361,0;48279,0;Universidad Rey Juan Carlos;Presencial;False
-2023;29;807287,0;64933,0;Universidad de Granada;Presencial;True
+2023;29;807287,0;64933,0;Universidad de Granada;Presencial;False
 2023;42;519426,0;43571,0;Universidad de Málaga;Presencial;False
 2023;07;721545,0;41874,0;Universitat Autònoma de Barcelona;Presencial;False
 2023;53;111571,0;42046,0;Universitat Politècnica de Catalunya;Presencial;False
@@ -77,7 +77,7 @@
 2024;19;675155,0;78425,0;Universidad Complutense de Madrid;Presencial;False
 2024;54;337326,0;46678,0;Universidad Politécnica de Madrid;Presencial;False
 2024;61;343727,0;50624,0;Universidad Rey Juan Carlos;Presencial;False
-2024;29;866305,0;64956,0;Universidad de Granada;Presencial;True
+2024;29;866305,0;64956,0;Universidad de Granada;Presencial;False
 2024;42;378237,0;43310,0;Universidad de Málaga;Presencial;False
 2024;07;791369,0;42692,0;Universitat Autònoma de Barcelona;Presencial;False
 2024;53;119094,0;44347,0;Universitat Politècnica de Catalunya;Presencial;False
@@ -91,7 +91,7 @@
 2025;29;883466,0;66834,0;Universidad de Granada;Presencial;False
 2025;42;419004,0;41799,0;Universidad de Málaga;Presencial;False
 2025;74;423095,0;43354,0;Universidad de Zaragoza;Presencial;False
-2025;07;946714,0;47825,0;Universitat Autònoma de Barcelona;Presencial;True
+2025;07;946714,0;47825,0;Universitat Autònoma de Barcelona;Presencial;False
 2025;55;750640,0;40238,0;Universitat Politècnica de València;Presencial;False
 2025;09;669143,0;71702,0;Universitat de Barcelona;Presencial;False
 2025;70;756568,0;62590,0;Universitat de València;Presencial;False

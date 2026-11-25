@@ -12,9 +12,10 @@ queda pendiente de confirmación documental. [CSV originales](https://github.com
 El directorio aporta una modalidad por centro, aplicada a todo el periodo.
 Cada año se filtran centros presenciales distintos de 67 que declaren
 NUSUARIOPROP superior a 40.000. Se mantienen en el listado los elegibles sin
-NPRESTDOMIC, si los hay. Mediana y máximo usan observaciones disponibles,
-incluido cero cuando figura como valor. Todos los centros empatados en el
-máximo se marcan como referencia. Son recuentos absolutos. La composición
+NPRESTDOMIC, si los hay. El Benchmark es la mediana de los valores externos
+disponibles. La Referencia del grupo incorpora también el valor de la BUS.
+Se incluye el cero cuando figura como dato válido. Los comparadores
+empatados en la referencia se identifican en `grupo.csv`. Son recuentos absolutos. La composición
 variable y la escala de los centros condicionan la comparación.
 
 ## Ruptura alrededor de 2020
@@ -78,6 +79,9 @@ entre ambas líneas y termina en el último año observado. Para indicadores de
 polaridad decreciente (`mejor: min`), la referencia es el mínimo
 anual y el área queda entre ese mínimo y la mediana. Para los de
 polaridad creciente (`mejor: max`), el máximo es la referencia.
+Cuando la BUS alcanza el extremo con polaridad definida, incluidos
+los empates, el círculo de la referencia se rellena de rojo. La
+columna `bus_lider` recoge esa condición en `serie.csv`.
 La banda describe resultados observados del grupo, sin interpretación
 de intervalo de confianza ni de zona de excelencia. El PNG integra estas definiciones, la nota de
 incertidumbre y las cifras BUS en vertical dentro de sus barras. Los
@@ -107,14 +111,14 @@ La revisión de FU-010 indicada arriba contiene, para BUS 67 y
 `Codigo_Tecnico`. Las definiciones de esta tabla son las denominaciones
 del fichero longitudinal. Las razones son cálculos del prototipo.
 
-| Indicador | Cálculo | Referencia anual |
+| Indicador | Cálculo | Referencia anual (incluida la BUS) |
 |---|---|---|
 | Préstamos domiciliarios de material bibliográfico | `NPRESTDOMIC`, préstamos domiciliarios | Máximo |
 | Monografías electrónicas de pago | `NMONPAGOLIC`, recuento de monografías electrónicas de pago | Máximo |
 | Personas usuarias por puesto de lectura | `NUSUARIOPROP` (personas usuarias propias) / `NPUESTOSLECT` (puestos de lectura) | Mínimo |
 | Porcentaje del gasto en información electrónica | 100 × `GASTOINFOELECT` (gasto en información electrónica) / `GASTORECINFO` (gasto en recursos de información) | Máximo descriptivo provisional |
 
-La polaridad estratégica del porcentaje queda pendiente. Sus metas y
+La polaridad estratégica del porcentaje queda pendiente. El máximo que incluye a la BUS es descriptivo y no genera marcadores de liderazgo. Sus metas y
 límites ilustrativos son referencias gráficas, sin valoración del
 desempeño. Para puestos de lectura, la meta es inferior al límite por
 tratarse de una razón de polaridad decreciente.
@@ -149,7 +153,8 @@ La muestra de validación sigue siendo breve. Las previsiones sirven
 para probar la representación y conservan la advertencia de
 incertidumbre sin intervalo calibrado.
 
-En las monografías electrónicas de pago, la BUS supera el máximo del
-grupo en 2020–2025. En 2025, la BUS registra 1.024.655 y el máximo
-comparador es 946.714. Localizador: `NMONPAGOLIC/serie.csv`, campos
-`bus` y `referencia`, 2020–2025.
+En las monografías electrónicas de pago, la BUS fija la referencia
+anual en 2020–2025. En 2025 la referencia coincide con su resultado,
+1.024.655. El mayor valor de los comparadores externos es 946.714.
+Localizadores: `NMONPAGOLIC/serie.csv`, campos `bus`, `referencia` y
+`bus_lider`, y `NMONPAGOLIC/grupo.csv`, valores del indicador en 2025.
