@@ -8,6 +8,14 @@ Prototipo de una lámina por indicador, preparada para incorporarse como imagen 
 [Serie CSV](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/serie.csv) ·
 [Metodología y limitaciones](metodologia.md).
 
+
+## Metodología
+
+Consulta la [metodología de representación](metodologia.md), el
+[estándar gráfico](metodologia.md#9-estándar-de-representación-gráfica),
+el [registro de decisiones](metodologia.md#13-registro-de-decisiones)
+y el [anexo predictivo](metodologia.md#anexo-técnico-y-resultados-reproducibles).
+
 ## Indicadores
 
 - [Préstamos domiciliarios de material bibliográfico](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/).
