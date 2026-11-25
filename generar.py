@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from datos import cargar, preparar
-from grafico import exportar, grafico
+from grafico import BARRAS, CONTROLES, SEPARACION, exportar, grafico
 from prevision import evaluar
 
 
@@ -47,9 +47,25 @@ def pagina(config, codigo, datos, centros, root):
                   modelo, ajuste["ilustrativos"])
     exportar(fig, destino)
     plantilla = Path(__file__).with_name("pagina.html").read_text(encoding="utf-8")
+    controles = []
+    for titulo, opciones in CONTROLES.items():
+        casillas = "".join(
+            f'<label><input type="checkbox" name="{serie}" checked> {nombre}</label>'
+            for serie, nombre in opciones.items()
+        )
+        controles.append(f"<fieldset><legend>{titulo}</legend>{casillas}</fieldset>")
+    svg = (destino / "grafica.svg").read_text(encoding="utf-8")
+    svg = svg[svg.index("<svg "):]
+    escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / (len(panel) + .04)
+    geometria = {
+        "escala": escala, "separacion": SEPARACION,
+        "grupos": [[{"id": serie, "ancho": ancho, "origen": origen}
+                    for (serie, _, ancho, _), origen in zip(grupo, (-.30, 0, .30))]
+                   for grupo in BARRAS],
+    }
     html = Template(plantilla).substitute(
-        titulo=escape(ajuste["titulo"]), subtitulo=escape(ajuste["subtitulo"]),
-        inicio=config["inicio"], fin=fin, primer_futuro=fin + 1, ultimo=years.stop - 1,
+        titulo=escape(ajuste["titulo"]), controles="".join(controles), grafica=svg,
+        geometria=json.dumps(geometria),
     )
     (destino / "index.html").write_text(html, encoding="utf-8")
 
@@ -62,6 +78,8 @@ def main():
     config = json.loads(Path(__file__).with_name("indicadores.json").read_text(encoding="utf-8"))
     args.salida.mkdir(parents=True, exist_ok=True)
     datos, centros = cargar(config, args.datos)
+    script = Path(__file__).with_name("selector.js").read_bytes()
+    (args.salida / "selector.js").write_bytes(script)
     (args.salida / "metodologia.md").write_text(
         Path(__file__).with_name("metodologia.md").read_text(encoding="utf-8").replace("](datos_procesados/", "](NPRESTDOMIC/"),
         encoding="utf-8"

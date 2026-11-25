@@ -6,20 +6,41 @@
 <title>$titulo · Indicadores EFQM 2028</title>
 <style>
 * { box-sizing: border-box; }
-body { margin: 0; color: #172637; background: #fff; font-family: system-ui, sans-serif; }
+body { margin: 0; color: #172637; background: white; font-family: system-ui, sans-serif; }
 header { border-bottom: 1px solid #dfe5ec; }
-h1 { width: min(100%, 1600px); margin: auto; padding: 18px clamp(20px, 4.7vw, 75px);
+h1 { max-width: 1600px; margin: auto; padding: 16px clamp(20px, 4.7vw, 75px);
      font-size: clamp(1rem, 2vw, 1.25rem); font-weight: 650; }
-main { max-width: 1600px; margin: auto; overflow-x: auto; }
-main:focus-visible { outline: 2px solid #365875; outline-offset: -2px; }
-img { display: block; width: 100%; min-width: 1040px; height: auto; }
+main { max-width: 1600px; margin: auto; }
+#opciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px;
+            margin: 16px clamp(20px, 4.7vw, 75px) 0; padding: 12px 16px;
+            background: #f5f8fb; border: 1px solid #dfe5ec; border-radius: 8px; font-size: .85rem; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; font-weight: 650; }
+label { display: inline-flex; gap: 4px; align-items: center; padding: 4px 7px 4px 0; }
+input { accent-color: #254d76; }
+button { padding: 7px 10px; border: 1px solid #b1c0d1; background: white; border-radius: 5px;
+         color: #172637; font: inherit; cursor: pointer; }
+#descargar { color: white; border-color: #254d76; background: #254d76; }
+#estado:empty { display: none; }
+#grafica { overflow-x: auto; }
+:focus-visible { outline: 2px solid #365875; outline-offset: 2px; }
+#grafica svg { display: block; width: 100%; min-width: 1040px; height: auto; }
 </style>
 </head>
 <body>
 <header><h1>Indicadores EFQM 2028</h1></header>
-<main tabindex="0" aria-label="Representación del indicador, desplazable horizontalmente en pantallas estrechas">
-<img src="grafica.png" width="3200" height="1480"
-     alt="$titulo. $subtitulo Resultados observados de $inicio a $fin y previsiones de $primer_futuro a $ultimo. Las metas y los límites son ilustrativos.">
+<main>
+<section id="opciones" aria-label="Elementos gráficos">
+$controles
+<div><button id="descargar" type="button">Descargar imagen PNG</button>
+<button id="restablecer" type="button">Restablecer selección</button></div>
+<p id="estado" role="status"></p>
+</section>
+<div id="grafica" tabindex="0" role="img" aria-label="$titulo. Representación desplazable horizontalmente en pantallas estrechas.">
+$grafica
+</div>
 </main>
+<script id="geometria" type="application/json">$geometria</script>
+<script src="../selector.js" defer></script>
 </body>
 </html>

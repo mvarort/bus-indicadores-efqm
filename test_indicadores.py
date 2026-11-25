@@ -11,7 +11,7 @@ from matplotlib.colors import to_rgba
 import pandas as pd
 from PIL import Image
 
-from grafico import AMARILLO, AZUL, BUS, LIMITE, META, grafico, numero
+from grafico import ALFA_BANDA, AZUL, BENCHMARK, BUS, CONTROLES, LIMITE, META, REFERENCIA, grafico, numero
 
 
 class Indicadores(unittest.TestCase):
@@ -84,15 +84,20 @@ class Indicadores(unittest.TestCase):
         fig = grafico(self.serie, 2025, config["titulo"], config["subtitulo"],
                       "Préstamos", "Media móvil de 3 años", True)
         ax = fig.axes[0]
-        mediana, referencia, *barras = ax.containers
-        for grupo, col, color in [(mediana, "benchmark", AZUL), (referencia, "referencia", AMARILLO)]:
-            self.assertEqual(len(grupo), 10)
-            for year, rect in zip(range(2016, 2026), grupo.patches):
-                self.assertAlmostEqual(rect.get_x() + rect.get_width() / 2, year)
-                self.assertEqual(rect.get_y() + rect.get_height(), self.serie.loc[year, col])
-                self.assertEqual(rect.get_y(), 0 if col == "benchmark" else self.serie.loc[year, "benchmark"])
-                self.assertEqual(rect.get_facecolor(), to_rgba(color))
-                self.assertLess(rect.get_zorder(), barras[0].patches[0].get_zorder())
+        barras = ax.containers
+        hist = self.serie.loc[:2025]
+        for linea, col, color in zip(ax.lines[:2], ("benchmark", "referencia"), (BENCHMARK, REFERENCIA)):
+            self.assertEqual(list(linea.get_xdata()), list(hist.index))
+            self.assertEqual(list(linea.get_ydata()), list(hist[col]))
+            self.assertEqual(linea.get_color(), color)
+            self.assertLess(linea.get_zorder(), barras[0].patches[0].get_zorder())
+        banda, = ax.collections
+        self.assertEqual(tuple(banda.get_facecolor()[0]), to_rgba(AZUL, ALFA_BANDA))
+        self.assertLess(banda.get_zorder(), ax.lines[0].get_zorder())
+        puntos = {tuple(p) for p in banda.get_paths()[0].vertices}
+        self.assertEqual({x for x, _ in puntos}, set(hist.index))
+        for y, fila in hist.iterrows():
+            self.assertEqual({v for x, v in puntos if x == y}, {fila.benchmark, fila.referencia})
         for futuro, grupos in [(False, barras[:3]), (True, barras[3:])]:
             panel = self.serie.loc[2026:] if futuro else self.serie.loc[:2025]
             for grupo, col, ancho, offset, color in zip(
@@ -114,7 +119,7 @@ class Indicadores(unittest.TestCase):
                     else:
                         self.assertEqual(rect.get_facecolor(), to_rgba(color))
         self.assertEqual(ax.get_ylim()[0], 0)
-        self.assertEqual(len(ax.lines), 1)
+        self.assertEqual(len(ax.lines), 3)
         self.assertEqual(numero(435759.5), "435.759,5")
         fig.canvas.draw()
         renderer = fig.canvas.get_renderer()
@@ -132,8 +137,14 @@ class Indicadores(unittest.TestCase):
     def test_archivos_estaticos(self):
         html = (self.distribucion / "index.html").read_text(encoding="utf-8")
         self.assertIn("<h1>Indicadores EFQM 2028</h1>", html)
-        self.assertIn('<img src="grafica.png"', html)
-        for accesorio in ["<script", "<button", "<table", "<details", "<fieldset", "<article"]:
+        self.assertIn('<svg ', html)
+        self.assertEqual(html.count('<fieldset>'), 3)
+        for opciones in CONTROLES.values():
+            for serie, nombre in opciones.items():
+                self.assertIn(f'name="{serie}" checked> {nombre}', html)
+        self.assertIn("Descargar imagen PNG", html)
+        self.assertIn("Restablecer selección", html)
+        for accesorio in ["<table", "<details", "<article"]:
             self.assertNotIn(accesorio, html)
         with Image.open(self.distribucion / "grafica.png") as png:
             self.assertEqual(png.size, (3200, 1480))

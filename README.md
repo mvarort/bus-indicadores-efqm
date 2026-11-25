@@ -1,6 +1,6 @@
 # Indicadores EFQM 2028
 
-Prototipo de una lámina por indicador, preparada para incorporarse como imagen en la plataforma de evaluación EFQM. La página pública muestra la misma lámina que el PNG.
+Prototipo de una lámina por indicador, preparada para incorporarse como imagen en la plataforma de evaluación EFQM. La página pública permite probar combinaciones de nueve elementos en tres bloques. Los elementos visibles se reagrupan por año y determinan la leyenda, las notas y el PNG descargado. «Restablecer selección» vuelve a mostrar todos los elementos. Los enlaces directos a PNG y SVG ofrecen la lámina con la selección inicial completa.
 
 [Ver la lámina](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/) ·
 [Descargar PNG de 3.200 × 1.480 px](https://mvarort.github.io/bus-indicadores-efqm/NPRESTDOMIC/grafica.png) ·
@@ -29,6 +29,7 @@ Abre http://localhost:8000. El generador obtiene los CSV públicos de la revisi�
 - `prevision.py` ajusta y valida los modelos.
 - `grafico.py` compone una figura estática con Matplotlib y exporta PNG y SVG.
 - `generar.py` escribe la página de cada indicador, ambas imágenes y sus CSV.
+- `selector.js` actualiza la figura SVG incrustada y rasteriza esa misma versión a PNG de 3.200 × 1.480 px.
 - `indicadores.json` contiene periodo, revisión de origen, regla del grupo y metas y límites por indicador y año. Los valores incluidos para 2016–2028 son ilustrativos. Cuando existan valores oficiales, sustituye las dos series completas y actualiza `ilustrativos`.
 
 El generador reutiliza esta composición para indicadores anuales de escala no negativa. Añade el código técnico, el título, el subtítulo, la unidad, el sentido y las metas y límites por año. Revisa la idoneidad estadística y comparativa para cada indicador. El contraste automatizado de referencia está fijado a NPRESTDOMIC y la revisión publicada.

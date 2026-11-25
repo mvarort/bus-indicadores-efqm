@@ -72,9 +72,9 @@ de nivel histórico, impiden calibrar con fiabilidad intervalos de
 predicción empíricos. Se publican estimaciones puntuales con esta
 limitación. Mediana y referencia del grupo se muestran solo en el histórico.
 Las metas y límites de 2016–2028 están en la configuración y son
-ilustrativos. En la lámina, la zona azul parte de cero y termina en la
-mediana. La zona amarilla parte de la mediana y termina en el mejor
-resultado anual. El PNG integra estas definiciones, la nota de
+ilustrativos. En la lámina, la línea azul media sigue la mediana y la
+azul oscura, el mejor resultado. La banda semitransparente ocupa el espacio
+entre ambas líneas y termina en el último año observado. El PNG integra estas definiciones, la nota de
 incertidumbre y las cifras BUS en vertical dentro de sus barras. Los
 valores exactos de metas, límites y comparaciones están en el CSV.
 
