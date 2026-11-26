@@ -95,7 +95,7 @@ function situarRotulos(visible, ajustes, escalaPantalla) {
 }
 
 function actualizar(escalaPantalla = grafica.getScreenCTM().a) {
-    const visible = Object.fromEntries(casillas.map(({name, checked}) => [name, checked]));
+    const visible = Object.fromEntries(casillas.map(control => [control.name, control.checked && !control.disabled && !control.closest("[hidden]")]));
     Object.entries(series).forEach(([id, nodos]) => {
         nodos.forEach(nodo => ocultar(nodo, !visible[id]));
     });
@@ -189,7 +189,9 @@ async function descargar() {
         const enlace = document.createElement("a");
         enlace.href = URL.createObjectURL(png);
         const {codigo, horizonte} = document.querySelector("main").dataset;
-        enlace.download = `${codigo}-EFQM-${horizonte}a.png`;
+        const periodo = inicial.value === limites.inicioDisponible && final.value === limites.finDisponible
+            ? "" : `-${inicial.value}-${final.value}`;
+        enlace.download = `${codigo}-EFQM${periodo}${horizonte === "0" ? "" : `-${horizonte}a`}.png`;
         enlace.click();
         setTimeout(() => URL.revokeObjectURL(enlace.href), 1000);
         estado.textContent = "";
@@ -208,15 +210,30 @@ if (vista && /^[01]+$/.test(vista)) {
         controles.forEach((control, i) => { control.checked = restaurada[i] === "1"; });
     }
 }
-function cambiarVista(ruta) {
-    const destino = new URL(ruta, location.href);
+const indicador = document.querySelector("#indicador");
+const prospectiva = document.querySelector("#horizonte");
+const inicial = document.querySelector("#anio-inicial");
+const final = document.querySelector("#anio-final");
+const limites = document.querySelector("main").dataset;
+const horizonteAnterior = new URLSearchParams(location.search).get("prospectiva");
+if (prospectiva.hidden && [...prospectiva.options].some(opcion => opcion.value === horizonteAnterior)) {
+    prospectiva.value = horizonteAnterior;
+}
+
+function cambiarVista() {
+    if (Number(inicial.value) > Number(final.value)) return;
+    const horizonte = prospectiva.value;
+    const conProspectiva = final.value === limites.finDisponible;
+    const completo = conProspectiva && inicial.value === limites.inicioDisponible;
+    const alternativo = horizonte !== limites.horizonteInicial;
+    const archivo = completo ? (alternativo ? `${horizonte}.html` : "") :
+        `historico-${inicial.value}-${final.value}${conProspectiva && alternativo ? `-${horizonte}` : ""}.html`;
+    const destino = new URL(indicador.value + archivo, location.href);
+    if (!conProspectiva) destino.searchParams.set("prospectiva", horizonte);
     destino.searchParams.set("vista", controles.map(control => Number(control.checked)).join(""));
     location.assign(destino);
 }
-document.querySelector("#indicador").addEventListener("change", ({target}) => {
-    cambiarVista(target.value + document.querySelector("main").dataset.archivoHorizonte);
-});
-document.querySelector("#horizonte").addEventListener("change", ({target}) => cambiarVista(target.value));
+[indicador, prospectiva, inicial, final].forEach(control => control.addEventListener("change", cambiarVista));
 
 panel.addEventListener("change", () => actualizar());
 const redimensionar = new ResizeObserver(() => actualizar());

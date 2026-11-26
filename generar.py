@@ -2,6 +2,7 @@
 import argparse
 import json
 from hashlib import sha256
+from itertools import combinations_with_replacement
 from html import escape
 from pathlib import Path
 from string import Template
@@ -11,7 +12,7 @@ import pandas as pd
 
 from datos import cargar, preparar
 from etiquetas import geometria_etiquetas, situar_estaticas
-from grafico import BARRAS, CONTROLES, ETIQUETAS_INICIALES, SEPARACION, exportar, grafico
+from grafico import BARRAS, CONTROLES, ETIQUETAS_INICIALES, SEPARACION, exportar, grafico, svg_figura
 from prevision import evaluar
 from intervalos import METODOS, evaluar_intervalos
 from revision_predictiva import MINIMOS_RECIENTE, estudiar, pronosticar
@@ -94,40 +95,69 @@ def pagina(config, codigo, datos, centros, root, version_selector):
         csv(vista, destino, f"serie{sufijo}.csv", index=True)
         dibujar_pagina(config, codigo, ajuste, vista, modelo_grafico, destino, horizonte, sufijo,
                        nota_intervalo, version_selector, periodo_ajuste)
+    for inicial, final in combinations_with_replacement(range(config["inicio"], fin + 1), 2):
+        if (inicial, final) == (config["inicio"], fin):
+            continue
+        horizontes = config["horizontes"] if final == fin else [0]
+        for horizonte in horizontes:
+            vista = panel.loc[inicial:final + horizonte]
+            dibujar_pagina(config, codigo, ajuste, vista, modelo_grafico, destino, horizonte, "",
+                           nota_intervalo if horizonte else None, version_selector, periodo_ajuste,
+                           final_visible=final)
+
+
+def opciones_anuales(inicio, fin, seleccionado, menor, mayor):
+    opciones = []
+    for year in range(inicio, fin + 1):
+        estado = " selected" if year == seleccionado else ""
+        if not menor <= year <= mayor:
+            estado += " disabled"
+        opciones.append(f'<option value="{year}"{estado}>{year}</option>')
+    return "".join(opciones)
 
 
 def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, sufijo,
-                  nota_intervalo, version_selector, periodo_ajuste):
+                  nota_intervalo, version_selector, periodo_ajuste, final_visible=None):
     fin = config["fin"]
-    fig = grafico(panel, fin, ajuste["titulo"], ajuste.get("subtitulo", config["subtitulo"]),
+    inicial = int(panel.index[0])
+    final = fin if final_visible is None else final_visible
+    periodo_visible = f"{inicial}–{final}" if inicial != final else str(inicial)
+    subtitulo = ajuste.get("subtitulo", config["subtitulo"])
+    fig = grafico(panel, final, ajuste["titulo"], f"{subtitulo} · Histórico: {periodo_visible}",
                   ajuste["unidad"], modelo, ajuste["ilustrativos"], decimales=ajuste["decimales"],
                   maximo=ajuste["limites_naturales"][1], notas_indicador=ajuste["notas"],
                   polaridad=ajuste["polaridad"], unidad_porcentual=ajuste.get("formato") == "porcentaje",
-                  nota_intervalo=nota_intervalo, periodo_ajuste=periodo_ajuste)
+                  nota_intervalo=nota_intervalo, periodo_ajuste=periodo_ajuste, periodo_visible=periodo_visible)
     disposicion = geometria_etiquetas(fig)
-    situar_estaticas(fig, disposicion)
-    exportar(fig, destino, sufijo)
+    if final_visible is None:
+        situar_estaticas(fig, disposicion)
+        exportar(fig, destino, sufijo)
+        svg = (destino / f"grafica{sufijo}.svg").read_text(encoding="utf-8")
+        archivo = f"{horizonte}.html" if sufijo else "index.html"
+    else:
+        svg = svg_figura(fig)
+        variante = f"-{horizonte}" if horizonte and horizonte != config["horizonte"] else ""
+        archivo = f"historico-{inicial}-{final}{variante}.html"
     plantilla = Path(__file__).with_name("pagina.html").read_text(encoding="utf-8")
     controles = []
     for titulo, opciones in CONTROLES.items():
         casillas = []
         for serie, nombre in opciones.items():
-            inicial = " checked" if serie in ETIQUETAS_INICIALES else ""
+            marcada = " checked" if serie in ETIQUETAS_INICIALES else ""
             if serie == "comparison_band":
                 cifra = f'<input type="checkbox" data-etiqueta="{serie}" disabled hidden><span aria-hidden="true">—</span>'
             else:
-                cifra = f'<input type="checkbox" data-etiqueta="{serie}" aria-label="Cifras de {nombre}"{inicial}>'
+                cifra = f'<input type="checkbox" data-etiqueta="{serie}" aria-label="Cifras de {nombre}"{marcada}>'
             casillas.append(
                 f'<label><input type="checkbox" name="{serie}" checked> {nombre}</label>'
                 + cifra
             )
         controles.append(
-            f'<fieldset><legend>{titulo}</legend><div class="series">'
+            f'<fieldset{" hidden" if titulo == "Prospectiva" and not horizonte else ""}><legend>{titulo}</legend><div class="series">'
             f'<span>Serie</span><span>Cifras</span>{"".join(casillas)}</div></fieldset>'
         )
-    svg = (destino / f"grafica{sufijo}.svg").read_text(encoding="utf-8")
     svg = svg[svg.index("<svg "):]
-    escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / (len(panel) + .04)
+    escala = fig.axes[0].get_position().width * fig.get_figwidth() * 72 / np.ptp(fig.axes[0].get_xlim())
     geometria = {
         **disposicion, "escala": escala, "separacion": SEPARACION,
         "grupos": [[{"id": serie, "ancho": ancho, "origen": origen, "color": color}
@@ -140,17 +170,19 @@ def dibujar_pagina(config, codigo, ajuste, panel, modelo, destino, horizonte, su
         opciones.append(f'<option value="../{escape(otro_id)}/"{seleccionado}>{escape(otro["titulo"])}</option>')
     horizontes = []
     for opcion in config["horizontes"]:
-        archivo = "./" if opcion == config["horizonte"] else f"{opcion}.html"
         seleccionado = " selected" if opcion == horizonte else ""
-        horizontes.append(f'<option value="{archivo}"{seleccionado}>{opcion} años · {fin + 1}–{fin + opcion}</option>')
+        horizontes.append(f'<option value="{opcion}"{seleccionado}>{opcion} años · {fin + 1}–{fin + opcion}</option>')
     html = Template(plantilla).substitute(
         titulo=escape(ajuste["titulo"]), indicadores="".join(opciones), controles="".join(controles), grafica=svg,
         geometria=json.dumps(geometria), version_selector=version_selector,
         horizontes="".join(horizontes), horizonte=horizonte, codigo=escape(codigo),
-        archivo_horizonte=f"{horizonte}.html" if sufijo else "",
+        inicio_disponible=config["inicio"], fin_disponible=fin,
+        horizonte_inicial=config["horizonte"], prospectiva_oculta="" if horizonte else " hidden",
+        anios_iniciales=opciones_anuales(config["inicio"], fin, inicial, config["inicio"], final),
+        anios_finales=opciones_anuales(config["inicio"], fin, final, inicial, fin),
         intervalo_control="" if nota_intervalo else " disabled",
     )
-    (destino / (f"{horizonte}.html" if sufijo else "index.html")).write_text(html, encoding="utf-8")
+    (destino / archivo).write_text(html, encoding="utf-8")
 
 
 def main():

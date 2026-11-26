@@ -1,6 +1,6 @@
 # Metodología de representación de indicadores EFQM 2028
 
-**Revisión del 25/11/2026.** Documento de trabajo de la Biblioteca de la Universidad de Sevilla (BUS). Las decisiones consolidadas describen el prototipo vigente. La selección de indicadores, las metas oficiales y los requisitos de la evaluación de 2028 siguen sujetos a validación.
+**Revisión del 26/11/2026.** Documento de trabajo de la Biblioteca de la Universidad de Sevilla (BUS). Las decisiones consolidadas describen el prototipo vigente. La selección de indicadores, las metas oficiales y los requisitos de la evaluación de 2028 siguen sujetos a validación.
 
 [Estándar gráfico](#9-estándar-de-representación-gráfica) · [Referencias](#12-referencias-bibliográficas-y-normativas) · [Registro de decisiones](#13-registro-de-decisiones) · [Evidencias predictivas](#anexo-técnico-y-resultados-reproducibles)
 
@@ -41,6 +41,27 @@ Los originales se conservan. Los CSV procesados son instantáneas. Ante una camp
 Los diez años visibles, **2016–2025**, permiten observar trayectoria, variabilidad y la ruptura alrededor de 2020. Los periodos de **2026–2028** y **2026–2030** sirven respectivamente para la lectura de corto plazo y para ensayar un horizonte estratégico más amplio. Tres años es la vista inicial. Ambas vistas se obtienen del mismo ajuste a cinco años, por lo que coinciden los pronósticos de 2026–2028.
 
 El periodo de ajuste se declara por indicador y aparece en la nota de la imagen. Puede ser más corto que el histórico dibujado cuando los datos antiguos describen otro régimen. La revisión anual es una pauta de mantenimiento que debe aplicarse al disponer de una campaña validada. Incluye comprobar si cambiaron las definiciones, la selección del modelo y la cobertura retrospectiva. [Configuración](indicadores.json) · [Generación de horizontes](generar.py) · [Métodos vigentes](#metodología-predictiva-revisada--25112026)
+
+
+**Ventana de visualización (MR-16, 26/11/2026).** «Año inicial» y «Año final»
+seleccionan un intervalo inclusivo del histórico disponible. El valor inicial
+es 2016–2025 y se admite un único año. Los menús deshabilitan las opciones
+que invertirían los extremos. Las vistas se generan a partir de una misma
+serie calculada por indicador. Recortar solo decide qué registros se dibujan,
+incluidas las referencias y las filas numéricas. El periodo de ajuste,
+el modelo, la previsión, los intervalos y los valores de planificación
+siguen siendo los de la serie original. El subtítulo y la nota identifican
+la ventana visible y el periodo de ajuste.
+
+La prospectiva se muestra si el año final coincide con el último año
+observado de la serie. Cuando el recorte termina antes, la gráfica omite las
+barras, filas, leyenda y controles futuros. Así se evita dibujar años
+futuros separados del último resultado mostrado por años históricos
+ocultos. Al restaurar el último año se recuperan el horizonte y las
+opciones de visibilidad anteriores. El espacio por año y la escala se
+adaptan al contenido, con un margen horizontal mínimo para las ventanas
+más estrechas. El PNG conserva el periodo y los elementos de la vista activa.
+[Generación de vistas](generar.py) · [Controles y exportación](selector.js)
 
 ## 4. Comparaciones externas
 
@@ -192,6 +213,7 @@ La fecha indica la consolidación documental. «Consolidada» significa implemen
 | MR-13 | Selección experimental y exportación PNG sin controles | Evaluar variantes y obtener imagen de evaluación | Captura de la interfaz completa | [Exportación](selector.js) | Consolidada | 25/11/2026 |
 | MR-14 | Confirmar edición EFQM, selección definitiva y condiciones de presentación | Aplicar los requisitos vigentes del ciclo | Presuponer continuidad desde 2025 | EFQM y alcance del encargo | Pendiente de validación | 25/11/2026 |
 | MR-15 | Contrastar definiciones de campaña y calibrar con más observaciones | Interpretar rupturas y mejorar evidencia de cobertura | Atribuir causalidad o cobertura a la muestra actual | REBIUN, ISO y [anexo predictivo](#metodología-predictiva-revisada--25112026) | Pendiente de validación | 25/11/2026 |
+| MR-16 | Ventana histórica inclusiva independiente del ajuste y de la prospectiva | Permite centrar la lectura en un periodo con comparaciones constantes y evitar saltos si se recorta el último año | Reestimar con la ventana visible o mostrar prospectiva tras un histórico discontinuo | [Generación](generar.py), [controles](selector.js) y [pruebas](test_indicadores.py) | Consolidada | 26/11/2026 |
 
 ## 14. Mantenimiento y publicación
 

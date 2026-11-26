@@ -6,6 +6,7 @@
 <title>$titulo · Indicadores EFQM 2028</title>
 <style>
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; color: #172637; background: white; font-family: system-ui, sans-serif; }
 header { border-bottom: 1px solid #dfe5ec; }
 h1 { max-width: 1600px; margin: auto; padding: 16px clamp(20px, 4.7vw, 75px);
@@ -36,14 +37,17 @@ button { padding: 7px 10px; border: 1px solid #b1c0d1; background: white; border
 </head>
 <body>
 <header><h1>Indicadores EFQM 2028</h1></header>
-<main data-codigo="$codigo" data-horizonte="$horizonte" data-archivo-horizonte="$archivo_horizonte">
+<main data-codigo="$codigo" data-horizonte="$horizonte" data-inicio-disponible="$inicio_disponible" data-fin-disponible="$fin_disponible" data-horizonte-inicial="$horizonte_inicial">
 <div class="indicador"><label for="indicador">Indicador</label>
 <select id="indicador">$indicadores</select>
-<label for="horizonte">Prospectiva</label>
-<select id="horizonte">$horizontes</select></div>
+<label for="horizonte"$prospectiva_oculta>Prospectiva</label>
+<select id="horizonte"$prospectiva_oculta>$horizontes</select></div>
+<div class="indicador" role="group" aria-label="Periodo histórico de visualización">
+<label for="anio-inicial">Año inicial</label><select id="anio-inicial">$anios_iniciales</select>
+<label for="anio-final">Año final</label><select id="anio-final">$anios_finales</select></div>
 <section id="opciones" aria-label="Elementos gráficos">
 $controles
-<label><input type="checkbox" name="prediction_interval" checked$intervalo_control> Intervalo de predicción (95 %)</label>
+<label$prospectiva_oculta><input type="checkbox" name="prediction_interval" checked$intervalo_control> Intervalo de predicción (95 %)</label>
 <div><button id="descargar" type="button">Descargar imagen PNG</button>
 <button id="restablecer" type="button">Restablecer selección</button></div>
 <p id="estado" role="status"></p>

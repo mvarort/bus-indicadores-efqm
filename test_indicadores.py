@@ -336,6 +336,33 @@ class Indicadores(unittest.TestCase):
         np.testing.assert_allclose(calculado, esperado[["obs_ci_lower", "obs_ci_upper"]])
         self.assertTrue(np.isnan(intervalo("Media móvil de 3 años", y[:5], 3, (0, None))).all())
 
+    def test_recortes_del_historico(self):
+        for codigo in self.config["indicadores"]:
+            with self.subTest(codigo=codigo):
+                carpeta = self.distribucion.parent / codigo
+                self.assertEqual(len(list(carpeta.glob("historico-*.html"))), 63)
+                recorte = (carpeta / "historico-2019-2022.html").read_text()
+                self.assertIn('<select id="horizonte" hidden>', recorte)
+                self.assertIn('value="2019" selected', recorte)
+                self.assertIn('value="2022" selected', recorte)
+                self.assertIn('value="2023" disabled', recorte)
+                self.assertIn('value="2018" disabled', recorte)
+                self.assertIn("Histórico mostrado: 2019–2022", recorte)
+                self.assertIn("Prospectiva oculta por el recorte del histórico", recorte)
+                self.assertNotIn('id="serie-bus_forecast-barra-', recorte)
+                for year in range(2016, 2026):
+                    self.assertEqual(f'id="serie-bus_actual-barra-{year}"' in recorte, 2019 <= year <= 2022)
+                un_anio = (carpeta / "historico-2020-2020.html").read_text()
+                self.assertEqual(un_anio.count('id="serie-bus_actual-barra-'), 1)
+                largo = (carpeta / "historico-2022-2025-5.html").read_text()
+                self.assertIn('value="5" selected', largo)
+                self.assertIn('id="serie-bus_forecast-barra-2030"', largo)
+                for year in range(2026, 2031):
+                    self.assertIn(f'id="etiqueta-bus_forecast-{year}"', largo)
+                assertable = "2022–2025 (n=4)" if codigo == "NPRESTDOMIC" else "2016–2025 (n=10)"
+                self.assertIn(assertable, recorte)
+                self.assertIn(assertable, largo)
+
     def test_archivos_estaticos(self):
         html = (self.distribucion / "index.html").read_text(encoding="utf-8")
         self.assertIn("<h1>Indicadores EFQM 2028</h1>", html)

@@ -1,4 +1,6 @@
 """Composición estática y exportable de un indicador anual."""
+from io import StringIO
+
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
@@ -93,7 +95,7 @@ def rotular_comparacion(fig, ax, hist, fut, formato, formato_intervalo, nota_int
 
 
 def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
-            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False, nota_intervalo=None, periodo_ajuste=None):
+            decimales=0, maximo=None, notas_indicador=(), polaridad="creciente", unidad_porcentual=False, nota_intervalo=None, periodo_ajuste=None, periodo_visible=None):
     sufijo = " %" if unidad_porcentual else ""
     def formato(valor):
         return numero(valor, decimales, sufijo)
@@ -167,7 +169,9 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
 
     superior = panel[columnas_escala].max().max()
     ax.set_ylim(0, maximo if maximo is not None else max(superior * 1.13, 1e-9))
-    ax.set_xlim(panel.index[0] - .52, panel.index[-1] + .52)
+    # Mantiene barras proporcionadas incluso cuando solo se representa un año.
+    margen = max(.52, (4 - len(panel))/2 + .52)
+    ax.set_xlim(panel.index[0] - margen, panel.index[-1] + margen)
     ax.set_xticks(panel.index, [str(y) for y in panel.index], fontsize=9, fontweight="medium")
     ax.yaxis.set_major_locator(MaxNLocator(nbins=6, steps=[1, 2, 2.5, 5, 10]))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: numero(value, decimales if decimales and not unidad_porcentual else None, sufijo)))
@@ -176,11 +180,13 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
     ax.grid(axis="y", color="#DFE5EC", linewidth=.65)
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.spines["bottom"].set_color("#AEBAC8")
-    ax.axvline(fin + .5, color="#AEBAC8", linewidth=.8, linestyle=(0, (2, 4)), zorder=2)
-    ax.text(panel.index[0] - .52, 1.07, unidad, transform=ax.get_xaxis_transform(),
+    bloques = [(hist.index.to_numpy().mean(), "Histórico")]
+    if not fut.empty:
+        ax.axvline(fin + .5, color="#AEBAC8", linewidth=.8, linestyle=(0, (2, 4)), zorder=2)
+        bloques.append((fut.index.to_numpy().mean(), "Prospectiva"))
+    ax.text(ax.get_xlim()[0], 1.07, unidad, transform=ax.get_xaxis_transform(),
             size=9, color=SECUNDARIO, ha="left", va="bottom")
-    for centro, nombre in [((hist.index[0] + hist.index[-1]) / 2, "Histórico"),
-                            ((fut.index[0] + fut.index[-1]) / 2, "Prospectiva")]:
+    for centro, nombre in bloques:
         ax.text(centro, 1.025, nombre, transform=ax.get_xaxis_transform(),
                 size=10, weight="semibold", color=SECUNDARIO, ha="center")
 
@@ -196,6 +202,8 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
         ("reference", referencias["reference"]),
         ("comparison_band", Patch(facecolor=AZUL, alpha=ALFA_BANDA, label="Banda comparativa")),
     ]
+    if fut.empty:
+        elementos = [(id, muestra) for id, muestra in elementos if id != "bus_forecast"]
     if nota_intervalo:
         elementos.append(("prediction_interval", Line2D(
             [], [], color=GRIS_INTERVALO, linestyle="none", marker=SIMBOLO_INTERVALO,
@@ -221,6 +229,10 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
         ("plan", "Metas y límites ilustrativos." if ilustrativos else "Metas y límites oficiales."),
         ("prevision", f"Previsión mediante {modelo.lower()}{periodo}. Estimaciones sujetas a incertidumbre."),
     ]
+    if periodo_visible:
+        notas[0] = ("fuente", f"Fuente  REBIUN Data Explorer. Histórico mostrado: {periodo_visible}.")
+    if fut.empty and periodo_ajuste:
+        notas[-1] = ("solo-historico", f"Ajuste predictivo: {periodo_ajuste}. Prospectiva oculta por el recorte del histórico.")
     if nota_intervalo:
         notas.append(("intervalo", "Intervalo de predicción del 95 % nominal (remates grises). Cobertura sin calibrar con esta muestra."))
     elif nota_intervalo is not None:
@@ -238,15 +250,19 @@ def grafico(panel, fin, titulo, subtitulo, unidad, modelo, ilustrativos,
 def exportar(fig, destino, sufijo=""):
     """Exporta la misma composición al PNG principal y al SVG vectorial."""
     fig.savefig(destino / f"grafica{sufijo}.png", dpi=EXPORT_DPI)
+    (destino / f"grafica{sufijo}.svg").write_text(svg_figura(fig), encoding="utf-8")
+
+
+def svg_figura(fig):
     opcionales = [artista for artista in [*fig.texts, *fig.axes[0].texts]
                   if (artista.get_gid() or "").startswith("etiqueta-") and not artista.get_visible()]
     for artista in opcionales:
         artista.set_visible(True)
-    ruta_svg = destino / f"grafica{sufijo}.svg"
-    fig.savefig(ruta_svg, format="svg", metadata={"Title": fig.get_label(), "Date": None})
-    svg = ruta_svg.read_text(encoding="utf-8")
+    salida = StringIO()
+    fig.savefig(salida, format="svg", metadata={"Title": fig.get_label(), "Date": None})
+    svg = salida.getvalue()
     for artista in opcionales:
         grupo = f'<g id="{artista.get_gid()}"'
         svg = svg.replace(grupo + ">", grupo + ' style="display:none">', 1)
         artista.set_visible(False)
-    ruta_svg.write_text(svg, encoding="utf-8")
+    return svg

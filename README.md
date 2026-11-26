@@ -23,7 +23,10 @@ y el [anexo predictivo](metodologia.md#anexo-técnico-y-resultados-reproducibles
 - [Personas usuarias por puesto de lectura](https://mvarort.github.io/bus-indicadores-efqm/USUARIOS_POR_PUESTO/).
 - [Porcentaje del gasto en información electrónica](https://mvarort.github.io/bus-indicadores-efqm/PCT_GASTO_ELECTRONICO/).
 
-Usa el desplegable para cambiar la lámina. La siguiente página recibe
+Usa el desplegable para cambiar la lámina y los controles «Año inicial»
+y «Año final» para delimitar el histórico visible. La selección es
+independiente del ajuste. Si el año final es anterior a 2025, se oculta
+la prospectiva hasta volver al último año. La siguiente página recibe
 la selección de series y cifras, y «Descargar imagen PNG» recoge el
 indicador y los elementos visibles en ese momento. Cada carpeta pública
 incluye `grafica.png`, `grafica.svg`, `serie.csv` y los CSV de grupo y
